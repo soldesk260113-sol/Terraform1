@@ -39,6 +39,7 @@ variable "domain_name" {
 variable "primary_target_domain" {
   description = "Target domain for On-Premise/Primary Site (e.g. Ngrok URL)"
   type        = string
+  default     = "harangueful-garrett-inexpugnably.ngrok-free.dev"
 }
 
 variable "cluster_oidc_provider_arn" {
