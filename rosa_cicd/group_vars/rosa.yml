@@ -1,0 +1,45 @@
+# ROSA Cluster Variables
+rosa_cluster_name: dr-rosa-cluster
+aws_region: ap-northeast-2
+aws_account_id: "144991380580"
+ecr_registry: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+storage_class: "gp3-csi" # ROSA Default
+
+# Namespaces
+app_namespace: production
+tekton_namespace: tekton-pipelines
+argocd_namespace: argocd
+external_secrets_namespace: external-secrets
+
+# Harbor Configuration
+harbor_url: "10.2.2.40:5000"
+harbor_username: "admin"
+harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
+
+# Git Repository
+git_repo_url: "http://10.2.2.40:3001/admin/rosa-apps.git"
+git_branch: main
+
+# Applications
+applications:
+  - name: oauth-api
+    image: production/oauth-api
+    harbor_image: library/oauth-api
+  - name: web-v2-dashboard
+    image: production/web-v2-dashboard
+    harbor_image: library/web-v2-dashboard
+  - name: integrated-dashboard
+    image: production/integrated-dashboard
+    harbor_image: library/integrated-dashboard
+  - name: map-api
+    image: production/map-api
+    harbor_image: library/map-api
+  - name: energy-api
+    image: production/energy-api
+    harbor_image: library/energy-api
+  - name: my-web
+    image: production/my-web
+    harbor_image: library/my-web
+  - name: kma-api
+    image: production/kma-api
+    harbor_image: library/kma-api

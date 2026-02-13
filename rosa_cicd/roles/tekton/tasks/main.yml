@@ -1,0 +1,72 @@
+---
+# Tekton Pipelines Installation Role
+
+- name: Create Application Namespace
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    name: "{{ app_namespace }}"
+    kind: Namespace
+    state: present
+
+- name: Download Tekton Pipelines Release
+  get_url:
+    url: https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+    dest: /tmp/tekton-pipeline-release.yaml
+
+- name: Install Tekton Pipelines
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    src: /tmp/tekton-pipeline-release.yaml
+
+- name: Wait for Tekton Pipelines Controller
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubeconfig }}"
+    kind: Deployment
+    namespace: "{{ tekton_namespace }}"
+    name: tekton-pipelines-controller
+  register: tekton_controller
+  until: tekton_controller.resources[0].status.readyReplicas | default(0) > 0
+  retries: 30
+  delay: 10
+
+- name: Download Tekton Dashboard Release
+  get_url:
+    url: https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
+    dest: /tmp/tekton-dashboard-release.yaml
+
+- name: Install Tekton Dashboard
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    src: /tmp/tekton-dashboard-release.yaml
+
+- name: Download git-clone Task
+  get_url:
+    url: https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.9/git-clone.yaml
+    dest: /tmp/tekton-git-clone.yaml
+
+- name: Install git-clone Task
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    namespace: "{{ app_namespace }}"
+    state: present
+    src: /tmp/tekton-git-clone.yaml
+
+- name: Download kaniko Task
+  get_url:
+    url: https://raw.githubusercontent.com/tektoncd/catalog/main/task/kaniko/0.6/kaniko.yaml
+    dest: /tmp/tekton-kaniko.yaml
+
+- name: Install kaniko Task
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    namespace: "{{ app_namespace }}"
+    state: present
+    src: /tmp/tekton-kaniko.yaml
+
+- name: Create Tekton Pipeline Resources
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'pipeline.yml.j2') }}"

@@ -1,0 +1,51 @@
+---
+# Harbor to ECR Image Sync Tasks
+
+- name: Login to Harbor Registry
+  docker_login:
+    registry_url: "{{ harbor_url }}"
+    username: "{{ harbor_username }}"
+    password: "{{ harbor_password }}"
+    reauthorize: yes
+  register: harbor_login
+
+- name: Login to AWS ECR
+  shell: |
+    aws ecr get-login-password --region {{ aws_region }} | \
+      docker login --username AWS --password-stdin {{ ecr_registry }}
+  register: ecr_login
+  changed_when: false
+
+- name: Pull images from Harbor
+  docker_image:
+    name: "{{ harbor_url }}/{{ item.harbor_image }}"
+    source: pull
+    force_source: yes
+  loop: "{{ applications }}"
+  register: harbor_pull
+
+- name: Tag images for ECR
+  docker_image:
+    name: "{{ harbor_url }}/{{ item.harbor_image }}"
+    repository: "{{ ecr_registry }}/{{ item.image }}"
+    tag: latest
+    source: local
+    force_tag: yes
+  loop: "{{ applications }}"
+
+- name: Push images to ECR
+  docker_image:
+    name: "{{ ecr_registry }}/{{ item.image }}"
+    tag: latest
+    push: yes
+    source: local
+  loop: "{{ applications }}"
+  register: ecr_push
+
+- name: Display sync results
+  debug:
+    msg:
+      - "✅ Harbor → ECR 동기화 완료!"
+      - "Harbor: {{ harbor_url }}"
+      - "ECR: {{ ecr_registry }}"
+      - "동기화된 이미지: {{ applications | length }}개"

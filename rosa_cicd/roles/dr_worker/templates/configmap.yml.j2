@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dr-worker-config
+  namespace: dr-system
+data:
+  AWS_REGION: "{{ aws_region }}"
+  SQS_QUEUE_URL: "https://sqs.{{ aws_region }}.amazonaws.com/{{ aws_account_id }}/dr-failover-queue"
+  RDS_INSTANCE_ID: "dr-rds-replica"
+  ALB_DNS: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw alb_dns 2>/dev/null') | default('') }}"
+  VPN_CONNECTION_ID: ""

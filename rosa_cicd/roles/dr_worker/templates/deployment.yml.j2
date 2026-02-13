@@ -1,0 +1,31 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dr-worker
+  namespace: dr-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dr-worker
+  template:
+    metadata:
+      labels:
+        app: dr-worker
+    spec:
+      serviceAccountName: dr-worker-sa
+      containers:
+      - name: worker
+        image: {{ ecr_registry }}/production/dr-worker:latest
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: dr-worker-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

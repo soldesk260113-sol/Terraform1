@@ -1,0 +1,109 @@
+---
+# Gitea Repository Migration Playbook
+# 03_K8s_Infra -> rosa-apps (Tekton 전용)
+
+- name: Migrate to New Gitea Repository
+  hosts: localhost
+  gather_facts: no
+  
+  vars:
+    gitea_url: "http://10.2.2.40:3001"
+    gitea_user: "admin"
+    gitea_password: "admin123"
+    source_repo: "admin/03_K8s_Infra.git"
+    new_repo_name: "rosa-apps"
+    workspace: "/tmp/gitea_migration"
+  
+  tasks:
+    # 1. 새 리포지토리 생성 (API)
+    - name: Create new repository 'rosa-apps'
+      uri:
+        url: "{{ gitea_url }}/api/v1/user/repos"
+        method: POST
+        body_format: json
+        body:
+          name: "{{ new_repo_name }}"
+          description: "ROSA CI/CD Tekton Dedicated Repository"
+          private: false
+          auto_init: true
+        user: "{{ gitea_user }}"
+        password: "{{ gitea_password }}"
+        force_basic_auth: yes
+        status_code: [201, 422] # 422: 이미 존재함
+      register: create_repo_result
+      ignore_errors: yes
+
+    - name: Display repo creation result
+      debug:
+        msg: "Repository created/checked: {{ create_repo_result.status }}"
+
+    # 2. 작업 디렉토리 준비
+    - name: Clean workspace
+      file:
+        path: "{{ workspace }}"
+        state: absent
+    
+    - name: Create workspace
+      file:
+        path: "{{ workspace }}"
+        state: directory
+
+    # 3. 기존 리포지토리 클론
+    - name: Clone source repository
+      git:
+        repo: "{{ gitea_url }}/{{ source_repo }}"
+        dest: "{{ workspace }}/source"
+        version: main
+        force: yes
+    
+    # 4. 새 리포지토리 구조 생성
+    - name: Create new structure
+      file:
+        path: "{{ workspace }}/new_repo/apps"
+        state: directory
+        mode: '0755'
+    
+    # 5. 코드 복사 (apps 폴더 내용 이동)
+    - name: Copy application code
+      shell: |
+        cp -r {{ workspace }}/source/apps/* {{ workspace }}/new_repo/apps/
+      ignore_errors: yes
+    
+    # 6. README 생성
+    - name: Create README.md
+      copy:
+        dest: "{{ workspace }}/new_repo/README.md"
+        content: |
+          # ROSA Applications (Tekton Dedicated)
+          
+          AWS ROSA 클러스터 배포용 애플리케이션 모음
+          
+          ## 구조
+          - `apps/`: 애플리케이션 소스 코드 (Tekton 빌드 대상)
+          - `manifests/`: Kubernetes YAML (ArgoCD 배포 대상)
+    
+    # 7. Git 초기화 및 푸시 (토큰 인증 사용)
+    - name: Git Push to new repo
+      shell: |
+        cd {{ workspace }}/new_repo
+        
+        # Git 초기화 (main 브랜치 강제)
+        rm -rf .git
+        git init -b main
+        
+        git config user.name "Ansible Migration"
+        git config user.email "ansible@localhost"
+        
+        # 토큰을 포함한 URL 사용 (http://user:pass@url...)
+        git remote add origin http://{{ gitea_user }}:{{ gitea_password }}@{{ gitea_url | regex_replace('^http://', '') }}/{{ gitea_user }}/{{ new_repo_name }}.git
+        
+        git add .
+        git commit -m "Initial commit: Migrated from 03_K8s_Infra"
+        
+        # SSL 검증 비활성화 (필요 시)
+        git config http.sslVerify false
+        
+        git push -u origin main --force
+      environment:
+        GIT_TERMINAL_PROMPT: "0"
+

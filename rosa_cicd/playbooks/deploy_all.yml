@@ -1,0 +1,60 @@
+---
+# ROSA CI/CD 전체 설치 Playbook
+# Harbor → ECR 동기화 + CI/CD 설치
+
+# ========================================
+# 1. Harbor 이미지를 ECR로 동기화
+# ========================================
+- name: Sync Harbor Images to AWS ECR
+  hosts: localhost
+  gather_facts: no
+  
+  vars:
+    harbor_url: "10.2.2.40:5000"
+    harbor_username: "admin"
+    harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
+    aws_region: "ap-northeast-2"
+    aws_account_id: "{{ lookup('pipe', 'aws sts get-caller-identity --query Account --output text') }}"
+    ecr_registry: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+  
+  tasks:
+    - name: Include Harbor to ECR Sync Tasks
+      include_tasks: ../roles/harbor_sync/tasks/main.yml
+
+# ========================================
+# 2. ROSA CI/CD 설치
+# ========================================
+- name: Setup CI/CD Pipeline on ROSA Cluster
+  hosts: rosa
+  gather_facts: no
+  
+  roles:
+    - role: tekton
+      tags: [tekton, ci]
+    
+    - role: argocd
+      tags: [argocd, cd]
+    
+    - role: external_secrets
+      tags: [secrets]
+    
+    - role: dr_worker
+      tags: [dr]
+  
+  post_tasks:
+    - name: Display Setup Information
+      debug:
+        msg:
+          - "========================================="
+          - "ROSA CI/CD Setup Complete!"
+          - "========================================="
+          - "✅ Harbor → ECR 이미지 동기화 완료"
+          - "✅ Tekton Pipelines 설치 완료"
+          - "✅ ArgoCD 설치 완료"
+          - "✅ External Secrets Operator 설치 완료"
+          - "✅ DR Worker Pod 배포 완료"
+          - "========================================="
+          - "Tekton Dashboard: kubectl port-forward -n {{ tekton_namespace }} svc/tekton-dashboard 9097:9097"
+          - "ArgoCD UI: kubectl port-forward -n {{ argocd_namespace }} svc/argocd-server 8080:443"
+          - "ECR Registry: {{ ecr_registry }}"
+          - "========================================="

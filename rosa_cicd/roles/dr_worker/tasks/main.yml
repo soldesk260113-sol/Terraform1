@@ -1,0 +1,30 @@
+---
+# DR Worker Pod Deployment Role
+
+- name: Create DR Worker Namespace
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: dr-system
+
+- name: Create DR Worker ServiceAccount
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'serviceaccount.yml.j2') }}"
+
+- name: Create DR Worker ConfigMap
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'configmap.yml.j2') }}"
+
+- name: Deploy DR Worker Pod
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'deployment.yml.j2') }}"

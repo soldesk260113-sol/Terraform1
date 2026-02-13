@@ -1,0 +1,73 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-and-push
+  namespace: {{ app_namespace }}
+  labels:
+    app: rosa-cicd
+spec:
+  description: |
+    ROSA CI/CD 파이프라인
+    1. Git Clone: 소스 코드 가져오기
+    2. Kaniko Build: Docker 이미지 빌드 및 푸시
+  
+  params:
+    - name: git-url
+      type: string
+      description: "Git 리포지토리 URL (예: https://github.com/your-org/web-v2)"
+      default: "{{ git_repo_url }}"
+    - name: git-revision
+      type: string
+      description: "Git 브랜치 또는 태그"
+      default: "main"
+    - name: image-name
+      type: string
+      description: "ECR 이미지 이름 (예: production/web-v2)"
+    - name: image-tag
+      type: string
+      description: "이미지 태그 (버전)"
+      default: "latest"
+    - name: context-path
+      type: string
+      description: "빌드 컨텍스트 경로 (예: apps/energy-api)"
+      default: "."
+  
+  workspaces:
+    - name: source-ws
+      description: "소스 코드 및 빌드 아티팩트 공유 공간"
+  
+  tasks:
+    - name: fetch-source
+      taskRef:
+        name: git-clone
+        kind: Task
+        apiVersion: tekton.dev/v1beta1
+      workspaces:
+        - name: output
+          workspace: source-ws
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+    
+    - name: build-and-push
+      taskRef:
+        name: kaniko
+        kind: Task
+        apiVersion: tekton.dev/v1beta1
+      runAfter:
+        - fetch-source
+      workspaces:
+        - name: source
+          workspace: source-ws
+      params:
+        - name: IMAGE
+          value: "{{ ecr_registry }}/$(params.image-name):$(params.image-tag)"
+        - name: DOCKERFILE
+          value: $(params.context-path)/Dockerfile
+        - name: CONTEXT
+          value: $(params.context-path)

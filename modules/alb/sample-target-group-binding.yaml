@@ -1,0 +1,11 @@
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: my-service-tgb
+  namespace: default
+spec:
+  serviceRef:
+    name: my-web-service # Kubernetes Service 이름
+    port: 80
+  targetGroupARN: <TERRAFORM_OUTPUT_TARGET_GROUP_ARN> # Terraform에서 생성한 Target Group ARN 입력
+  targetType: instance # 또는 ip (ALB Target Group 설정에 맞춤)
