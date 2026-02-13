@@ -45,13 +45,13 @@ variable "primary_target_domain" {
 variable "cluster_oidc_provider_arn" {
   description = "IAM OIDC Provider ARN for the ROSA cluster"
   type        = string
-  default     = "arn:aws:iam::123456789012:oidc-provider/rh-oidc.s3.us-east-1.amazonaws.com/12345ABCDE"
+  default     = "arn:aws:iam::368352028691:oidc-provider/rh-oidc.s3.us-east-1.amazonaws.com/12345ABCDE"
 }
 
 variable "worker_image_url" {
   description = "ECR Image URL for the DR worker"
   type        = string
-  default     = "123456789012.dkr.ecr.ap-northeast-2.amazonaws.com/dr-worker:latest"
+  default     = "368352028691.dkr.ecr.ap-northeast-2.amazonaws.com/dr-worker:latest"
 }
 
 variable "dr_failover_queue_name" {
