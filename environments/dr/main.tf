@@ -17,9 +17,10 @@ module "network" {
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
   azs             = var.azs
-  # [참고] VPN 관련 변수 (customer_gateway_ip, bgp_asn)는 modules/network/vpn.tf의 기본값을 사용 중이지만,
-  # 환경 변수 설정을 우선하도록 명시적으로 전달합니다.
-  customer_gateway_ip = var.customer_gateway_ip
+  # VPN Configuration
+  customer_gateway_ip = var.onprem_ip
+  on_prem_cidr        = var.onprem_internal_cidr
+  vpn_psk             = var.vpn_psk
 }
 
 # 보안 모듈: 보안 그룹 및 ACL, WAF 설정
@@ -104,14 +105,16 @@ module "dr_failover" {
   security_group_ids      = [module.security.web_sg_id]
 
   primary_target_domain     = var.primary_target_domain
-  dr_failover_queue_name    = var.dr_failover_queue_name
+
   cluster_oidc_provider_arn = var.cluster_oidc_provider_arn
   worker_image_url          = var.worker_image_url
 
   # Health Check Configuration (Default: HTTP/80)
   # If you enable HTTPS on-prem later, change these to "HTTPS" and 443
-  health_check_type = "HTTP"
-  health_check_port = 80
+  health_check_type      = "HTTPS"
+  health_check_port      = 443
+  alarm_name             = "On-Prem-Disaster-Alarm"
+  dr_failover_queue_name = "DR-Failover-Queue"
 
   rds_cluster_identifier = module.database.db_instance_id
   target_deployment_name = "web-service"
@@ -151,4 +154,90 @@ spec:
         - name: AWS_REGION
           value: "${var.region}"
 YAML
+}
+
+#===============================================================================
+# VPN 검증용 EC2 및 IAM (20-ec2)
+#===============================================================================
+# IAM Role for SSM (키 페어 없이 접속)
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "ssm_role" {
+  name               = "${var.environment}-EC2RoleForSSM"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_core" {
+  role       = aws_iam_role.ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ssm_profile" {
+  name = "${var.environment}-EC2ProfileForSSM"
+  role = aws_iam_role.ssm_role.name
+}
+
+# Security Group
+resource "aws_security_group" "vpn_test" {
+  name   = "${var.environment}-sg-vpn-test"
+  vpc_id = module.network.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.onprem_internal_cidr]
+    description = "Allow SSH from On-Premise"
+  }
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.onprem_internal_cidr]
+    description = "Allow ICMP from On-Premise"
+  }
+
+  egress { # 아웃바운드 전체 허용 (필수)
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = { Name = "${var.environment}-sg-vpn-test" }
+}
+
+# EC2 Instance (Amazon Linux 2023)
+data "aws_ami" "al2023" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
+resource "aws_instance" "vpn_tester" {
+  ami                  = data.aws_ami.al2023.id
+  instance_type        = "t3.micro"
+  subnet_id            = module.network.private_subnet_ids[0]
+  iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
+  vpc_security_group_ids = [aws_security_group.vpn_test.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y nmap tcpdump
+              EOF
+
+  tags = { Name = "${var.environment}-vpn-tester-ec2" }
 }

@@ -14,5 +14,5 @@ output "repository_arns" {
 
 output "registry_id" {
   description = "ECR registry ID"
-  value       = aws_ecr_repository.repos["web-v2"].registry_id
+  value       = aws_ecr_repository.repos["dr-worker"].registry_id
 }

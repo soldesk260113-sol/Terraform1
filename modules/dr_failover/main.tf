@@ -135,8 +135,8 @@ resource "aws_cloudwatch_event_target" "sqs_target" {
 # [중요] 도메인으로 체크하여 전체 경로(FW → WAF → Ingress VIP → K8S) 모니터링
 resource "aws_route53_health_check" "onprem_check" {
   fqdn              = var.primary_target_domain
-  type              = "HTTP"
-  port              = 80
+  type              = var.health_check_type
+  port              = var.health_check_port
   resource_path     = "/healthz/global-status"
   failure_threshold = 3
   request_interval  = 30

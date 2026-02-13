@@ -25,3 +25,18 @@ output "certificate_arn" {
   description = "ACM certificate ARN for HTTPS"
   value       = module.route53.certificate_arn
 }
+
+output "vpn_tunnel1_public_ip" {
+  description = "Libreswan 설정 파일(aws.conf)의 'right' 값"
+  value       = module.network.vpn_tunnel1_address
+}
+
+output "vpn_tunnel2_public_ip" {
+  description = "HA 구성용 Tunnel 2 Public IP"
+  value       = module.network.vpn_tunnel2_address
+}
+
+output "ec2_instance_id" {
+  description = "SSM으로 접속할 인스턴스 ID"
+  value       = aws_instance.vpn_tester.id
+}

@@ -77,3 +77,22 @@ variable "db_password" {
   sensitive   = true
   default     = "password123"
 }
+
+variable "onprem_ip" {
+  description = "온프레미스(IDC) 공인 IP (Customer Gateway)"
+  type        = string
+  default     = "121.160.41.205"
+}
+
+variable "onprem_internal_cidr" {
+  description = "온프레미스 내부 사설망 대역"
+  type        = string
+  default     = "172.16.0.0/16"
+}
+
+variable "vpn_psk" {
+  description = "VPN 사전 공유 키"
+  type        = string
+  default     = "MySecretKey123"
+  sensitive   = true
+}
