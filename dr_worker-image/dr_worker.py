@@ -12,6 +12,8 @@ import boto3
 import logging
 import requests
 from datetime import datetime
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 로깅 설정
 logging.basicConfig(
@@ -120,7 +122,7 @@ class DRWorker:
             # Route53 Health Check 상태 확인
             # 또는 직접 HTTP 요청
             response = requests.get(
-                'http://cafekec.shop/healthz/global-status',
+                'http://cafekec.shop/health/global-status',
                 timeout=5
             )
             return response.status_code == 200
@@ -185,7 +187,8 @@ class DRWorker:
             
             response = requests.get(
                 f'http://{ALB_DNS}/health',
-                timeout=10
+                timeout=10,
+                verify=False
             )
             return response.status_code == 200
         

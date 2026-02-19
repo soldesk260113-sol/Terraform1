@@ -21,3 +21,6 @@ output "vpn_tunnel1_address" {
 output "vpn_tunnel2_address" {
   value = aws_vpn_connection.main.tunnel2_address
 }
+output "vpn_connection_id" {
+  value = aws_vpn_connection.main.id
+}

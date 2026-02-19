@@ -91,3 +91,9 @@ variable "target_deployment_name" {
   description = "Name of the deployment to scale/modify on failover"
   type        = string
 }
+
+variable "alarm_email" {
+  description = "Email address to receive SNS notifications for the alarm"
+  type        = string
+  default     = "wtdwd1015@naver.com"
+}

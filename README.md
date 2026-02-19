@@ -71,6 +71,7 @@
 *   `onprem_health_check_url`: 온프레미스 서비스 상태 체크 URL (현재 HTTP/80 사용 중. HTTPS 전환 시 `main.tf`의 `health_check_type` 변경 필요)
 *   `cluster_oidc_provider_arn`: ROSA 클러스터 생성 후 확인되는 OIDC ARN 입력
 *   `worker_image_url`: ECR에 푸시된 DR Worker 이미지 URL 입력
+*   **[중요] 민감 정보**: `db_password`와 `vpn_psk`는 보안을 위해 기본값이 제거되었습니다. `terraform.tfvars` 파일이나 환경 변수(`TF_VAR_db_password` 등)를 통해 반드시 주입해야 합니다.
 
 ---
 

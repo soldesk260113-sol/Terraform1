@@ -14,7 +14,7 @@ external_secrets_namespace: external-secrets
 # Harbor Configuration
 harbor_url: "10.2.2.40:5000"
 harbor_username: "admin"
-harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
+harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}" # 기본값 복구 (환경변수 없으면 Admin123)
 
 # Git Repository
 git_repo_url: "http://10.2.2.40:3001/admin/rosa-apps.git"
@@ -43,3 +43,6 @@ applications:
   - name: kma-api
     image: production/kma-api
     harbor_image: library/kma-api
+  - name: dr-worker
+    image: production/dr-worker
+    harbor_image: library/dr-worker

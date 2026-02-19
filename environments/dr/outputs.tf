@@ -40,3 +40,18 @@ output "ec2_instance_id" {
   description = "SSM으로 접속할 인스턴스 ID"
   value       = aws_instance.vpn_tester.id
 }
+
+output "db_instance_id" {
+  description = "RDS Instance ID for DR Worker"
+  value       = module.database.db_instance_id
+}
+
+output "sqs_queue_url" {
+  description = "SQS Queue URL for DR Worker"
+  value       = module.dr_failover.sqs_queue_url
+}
+
+output "vpn_connection_id" {
+  description = "VPN Connection ID for DR Worker"
+  value       = module.network.vpn_connection_id
+}

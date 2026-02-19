@@ -6,7 +6,7 @@ metadata:
   namespace: dr-system
 data:
   AWS_REGION: "{{ aws_region }}"
-  SQS_QUEUE_URL: "https://sqs.{{ aws_region }}.amazonaws.com/{{ aws_account_id }}/dr-failover-queue"
-  RDS_INSTANCE_ID: "dr-rds-replica"
+  SQS_QUEUE_URL: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw sqs_queue_url 2>/dev/null') | default('') }}"
+  RDS_INSTANCE_ID: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw db_instance_id 2>/dev/null') | default('') }}"
   ALB_DNS: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw alb_dns 2>/dev/null') | default('') }}"
-  VPN_CONNECTION_ID: ""
+  VPN_CONNECTION_ID: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw vpn_connection_id 2>/dev/null') | default('') }}"

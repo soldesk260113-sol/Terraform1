@@ -20,7 +20,7 @@ resource "aws_db_instance" "default" {
 
   db_subnet_group_name   = aws_db_subnet_group.default.name
   vpc_security_group_ids = var.security_group_ids
-  skip_final_snapshot    = true
+  skip_final_snapshot    = true # WARNING: Set to false for production to ensure data durability
   
   username = var.db_username
   password = var.db_password

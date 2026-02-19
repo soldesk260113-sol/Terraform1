@@ -86,8 +86,8 @@ resource "aws_cloudwatch_event_target" "target_region_bus" {
 # 2-1. SQS Queue in Application Region
 resource "aws_sqs_queue" "failover_queue" {
   name                      = var.dr_failover_queue_name
-  visibility_timeout_seconds = 900
-  message_retention_seconds  = 1209600 # 14 days
+  visibility_timeout_seconds = 30
+  message_retention_seconds  = 345600 # 4 days
 }
 
 # Queue Policy to allow EventBridge
@@ -137,13 +137,26 @@ resource "aws_route53_health_check" "onprem_check" {
   fqdn              = var.primary_target_domain
   type              = var.health_check_type
   port              = var.health_check_port
-  resource_path     = "/healthz/global-status"
+  resource_path     = "/health/global-status"
   failure_threshold = 3
   request_interval  = 30
   provider          = aws.us_east_1
 }
 
-# 2-3. CloudWatch Alarm (US-East-1)
+# 2-3. SNS Topic & Subscription (US-East-1)
+resource "aws_sns_topic" "onprem_failure" {
+  provider = aws.us_east_1
+  name     = "On-Prem-Disaster-Topic"
+}
+
+resource "aws_sns_topic_subscription" "email" {
+  provider  = aws.us_east_1
+  topic_arn = aws_sns_topic.onprem_failure.arn
+  protocol  = "email"
+  endpoint  = var.alarm_email
+}
+
+# 2-4. CloudWatch Alarm (US-East-1)
 resource "aws_cloudwatch_metric_alarm" "onprem_failure_alarm" {
   provider            = aws.us_east_1
   alarm_name          = var.alarm_name
@@ -154,7 +167,8 @@ resource "aws_cloudwatch_metric_alarm" "onprem_failure_alarm" {
   period              = "60"
   statistic           = "Minimum"
   threshold           = "1"
-  alarm_description   = "Route53 Health Check Failed"
+  alarm_description   = "온프레미스 VM(ngrok)의 상태 검사가 실패하여 발생한 장애 알람입니다. 이 알람이 발생하면 Route 53이 트래픽을 AWS DR 환경으로 Failover하며, EventBridge를 통해 SQS로 장애 메시지가 전송됩니다."
+  alarm_actions       = [aws_sns_topic.onprem_failure.arn]
   
   dimensions = {
     HealthCheckId = aws_route53_health_check.onprem_check.id
@@ -241,7 +255,8 @@ resource "aws_iam_policy" "worker_policy" {
         Effect = "Allow"
         Action = [
           "sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes",
-          "rds:PromoteReadReplica", "rds:DescribeDBInstances"
+          "rds:PromoteReadReplica", "rds:DescribeDBInstances",
+          "ec2:DescribeVpnConnections", "cloudwatch:GetMetricStatistics"
         ]
         Resource = "*"
       }

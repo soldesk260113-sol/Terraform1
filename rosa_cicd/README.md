@@ -42,8 +42,12 @@ export KUBECONFIG=~/.kube/rosa-config
 # Ansible Collection 설치
 ansible-galaxy collection install kubernetes.core community.docker
 
-# Harbor 비밀번호 설정
-export HARBOR_PASSWORD='Admin123'
+# [필수] Terraform Output 참조
+# DR Worker 설정(SQS, RDS ID 등)을 가져오기 위해 Terraform이 먼저 배포되어 있어야 합니다.
+# 경로: ../environments/dr
+
+# [선택] Harbor 비밀번호 설정 (미설정 시 기본값 'Admin123' 사용)
+export HARBOR_PASSWORD='YOUR_ACTUAL_PASSWORD'
 ```
 
 ### 2. 전체 배포 (권장)

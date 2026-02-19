@@ -153,6 +153,10 @@ spec:
           value: "web-service"
         - name: AWS_REGION
           value: "${var.region}"
+        - name: ALB_DNS
+          value: "${module.alb.dns_name}"
+        - name: VPN_CONNECTION_ID
+          value: "${module.network.vpn_connection_id}"
 YAML
 }
 

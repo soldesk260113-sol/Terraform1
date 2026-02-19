@@ -75,7 +75,6 @@ variable "db_password" {
   description = "Database admin password"
   type        = string
   sensitive   = true
-  default     = "password123"
 }
 
 variable "onprem_ip" {
@@ -93,6 +92,5 @@ variable "onprem_internal_cidr" {
 variable "vpn_psk" {
   description = "VPN 사전 공유 키"
   type        = string
-  default     = "MySecretKey123"
   sensitive   = true
 }
