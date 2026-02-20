@@ -29,11 +29,11 @@ apply_stack() {
 }
 
 # Dependency Order
-apply_stack "00-base-network"
-apply_stack "05-global"
-apply_stack "10-net-sec"
-apply_stack "20-edge"
+apply_stack "00-global"
+apply_stack "10-base-network"
+apply_stack "20-net-sec"
 apply_stack "30-database"
+apply_stack "40-edge"
 
 echo "=========================================="
 echo " Deployment Complete: $ENV"

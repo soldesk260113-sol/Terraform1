@@ -29,11 +29,11 @@ destroy_stack() {
 }
 
 # Reverse Dependency Order
+destroy_stack "40-edge"
 destroy_stack "30-database"
-destroy_stack "20-edge"
-destroy_stack "10-net-sec"
-destroy_stack "05-global"
-destroy_stack "00-base-network"
+destroy_stack "20-net-sec"
+destroy_stack "10-base-network"
+destroy_stack "00-global"
 
 echo "=========================================="
 echo " Destruction Complete: $ENV"

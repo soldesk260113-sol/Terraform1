@@ -10,11 +10,11 @@ AWS 기반 DR(Disaster Recovery) 인프라를 Terraform으로 관리하는 프�
 ```
 terraform/
 ├── stacks/                   # ✅ 메인 인프라 (레이어드 아키텍처)
-│   ├── 00-base-network/      # [L0] VPC, 서브넷, IGW, NAT GW, 라우팅
-│   ├── 05-global/            # [L1] ECR 레포지토리, S3 DR 백업 버킷
-│   ├── 10-net-sec/           # [L2] Site-to-Site VPN, Security Group
-│   ├── 20-edge/              # [L3] ALB, Route53 Failover, DR 자동화
-│   └── 30-database/          # [L4] RDS (DR Read Replica)
+│   ├── 00-global/            # [L0] ECR 레포지토리, S3 DR 백업 버킷
+│   ├── 10-base-network/      # [L1] VPC, 서브넷, IGW, NAT GW, 라우팅
+│   ├── 20-net-sec/           # [L2] Site-to-Site VPN, Security Group
+│   ├── 30-database/          # [L3] RDS (Aurora/PostgreSQL)
+│   └── 40-edge/              # [L4] ALB, Route 53 Failover, DR 자동화 로직
 │
 ├── rosa_cicd/                # ROSA 클러스터 CI/CD (Ansible 플레이북)
 │                             #   Tekton, ArgoCD, External Secrets 설정
@@ -32,14 +32,14 @@ terraform/
 
 | 스택 | 역할 | 환경 |
 |------|------|------|
-| `00-base-network` | VPC, 서브넷, 라우팅 테이블 | dev, dr |
-| `05-global` | ECR 레포지토리(8개), S3 DR 백업 버킷 | dr |
-| `10-net-sec` | 온프레미스↔AWS VPN, Security Group | dev, dr |
-| `20-edge` | ALB(HTTPS), Route53 Failover DNS, DR 자동화 | dev, dr |
-| `30-database` | RDS Read Replica (DR 동기화) | dr |
+| `00-global` | ECR 레포지토리(8개), S3 DR 백업 버킷 | dr |
+| `10-base-network` | VPC, 서브넷, 라우팅 테이블, NAT GW | dr |
+| `20-net-sec` | 온프레미스↔AWS VPN, Security Group | dr |
+| `30-database` | RDS (Aurora/PostgreSQL) | dr |
+| `40-edge` | ALB(HTTPS), Route 53 Failover DNS, DR 자동화 | dr |
 
-> 각 스택은 `envs/<환경>/` 아래에 환경별 설정을 가집니다.  
-> 스택 간 의존성은 `terraform_remote_state`로 참조합니다.
+> 각 스택은 `envs/dr/` 아래에 재해복구 환경 설정을 가집니다.  
+> 스택 간 의존성은 S3 기반 `terraform_remote_state`로 참조합니다.
 
 ---
 
@@ -47,7 +47,7 @@ terraform/
 
 ### 수동 실행
 ```bash
-cd stacks/<stack>/envs/<env>
+cd stacks/<stack>/envs/dr
 terraform init
 terraform plan
 terraform apply
@@ -58,12 +58,18 @@ terraform apply
 **전체 apply** (의존성 순서대로):
 ```bash
 ./scripts/apply_all.sh dr
-# 순서: 00 → 05 → 10 → 20 → 30
+# 실행 순서: 00-global → 10-base-network → 20-net-sec → 30-database → 40-edge
 ```
 
+**전체 destroy** (역순):
+```bash
 ./scripts/destroy_all.sh dr
-# 순서: 30 → 20 → 10 → 05 → 00
+# 실행 순서: 40-edge → 30-database → 20-net-sec → 10-base-network → 00-global
 ```
+
+---
+
+## 주요 구성 요소
 
 ### ROSA 클러스터 설정 (CI/CD)
 Terraform으로 인프라 배포 후, ROSA 클러스터 내부 설정을 위해 Ansible을 사용합니다.
@@ -89,19 +95,16 @@ docker build -t <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/production/dr-
 docker push <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/production/dr-worker:latest
 ```
 
-### 사전 요구사항 (tfvars)
-`.gitignore` 설정에 의해 `terraform.tfvars` 파일은 커밋되지 않습니다. 각 스택의 `envs/<env>/` 디렉터리에 `terraform.tfvars` 파일을 생성하고 필요한 변수(DB 비밀번호, IP 주소 등)를 입력해야 합니다.
-
 ---
 
-## DR 환경 구성
+## 재해복구(DR) 시나리오 구성
 
-| 구성 요소 | 스택 | 내용 |
+| 구성 요소 | 스택 | 기술 상세 |
 |-----------|------|------|
-| 네트워크 | `00-base-network` | VPC 10.10.0.0/16, 서브넷 |
-| 컨테이너 레지스트리 | `05-global` | ECR (8개 서비스 이미지) |
-| S3 백업 | `05-global` | DR 백업 버킷 (버전관리 + 암호화) |
-| VPN 연결 | `10-net-sec` | Libreswan 기반 Site-to-Site VPN |
-| 트래픽 진입 | `20-edge` | ALB + Route53 Failover |
-| DB 복제 | `30-database` | RDS Read Replica |
-| ROSA 클러스터 | - | `rosa` CLI로 직접 관리 |
+| 네트워크 | `10-base-network` | VPC 10.10.0.0/16, 전용 서브넷 |
+| 컨테이너 레지스트리 | `00-global` | ECR (이미지 영구 보관) |
+| S3 백업 | `00-global` | 버킷명: `dr-backup-ap-northeast-2` |
+| VPN 연결 | `20-net-sec` | AWS S2S VPN (VGW 기반) |
+| 트래픽 진입 / DNS | `40-edge` | ALB + Route 53 Failover (Active-Passive) |
+| 데이터베이스 | `30-database` | Aurora/PostgreSQL (Global Database 혹은 Replica) |
+| 자동 장애 조치 | `40-edge` | EventBridge + SQS + DR Worker (Pod) |
