@@ -5,11 +5,15 @@ resource "aws_wafv2_web_acl" "this" {
   # default_action: allow / block 선택
   dynamic "default_action" {
     for_each = var.default_action == "block" ? [1] : []
-    content { block {} }
+    content {
+      block {}
+    }
   }
   dynamic "default_action" {
     for_each = var.default_action == "allow" ? [1] : []
-    content { allow {} }
+    content {
+      allow {}
+    }
   }
 
   visibility_config {
@@ -25,7 +29,9 @@ resource "aws_wafv2_web_acl" "this" {
       name     = "AWSManagedRulesCommonRuleSet"
       priority = 10
 
-      override_action { none {} }
+      override_action {
+        none {}
+      }
 
       statement {
         managed_rule_group_statement {
@@ -49,7 +55,9 @@ resource "aws_wafv2_web_acl" "this" {
       name     = "AWSManagedRulesKnownBadInputsRuleSet"
       priority = 20
 
-      override_action { none {} }
+      override_action {
+        none {}
+      }
 
       statement {
         managed_rule_group_statement {
@@ -73,7 +81,9 @@ resource "aws_wafv2_web_acl" "this" {
       name     = "AWSManagedRulesSQLiRuleSet"
       priority = 30
 
-      override_action { none {} }
+      override_action {
+        none {}
+      }
 
       statement {
         managed_rule_group_statement {
@@ -97,7 +107,9 @@ resource "aws_wafv2_web_acl" "this" {
       name     = "AWSManagedRulesLinuxRuleSet"
       priority = 40
 
-      override_action { none {} }
+      override_action {
+        none {}
+      }
 
       statement {
         managed_rule_group_statement {
@@ -121,7 +133,9 @@ resource "aws_wafv2_web_acl" "this" {
       name     = "RateLimitPerIP"
       priority = 50
 
-      action { block {} }
+      action {
+        block {}
+      }
 
       statement {
         rate_based_statement {

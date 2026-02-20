@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "dr_backup" {
-  bucket = "${var.environment}-dr-backup-${var.region}"
+  bucket = "${var.environment}-backup-${var.region}"
 
   tags = {
     Name        = "${var.environment}-backup"

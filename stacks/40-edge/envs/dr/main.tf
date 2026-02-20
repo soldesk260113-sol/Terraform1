@@ -86,3 +86,9 @@ module "dr_failover" {
   target_deployment_name = "web-service"
   alarm_email            = var.alarm_email
 }
+
+# WAF Association with ALB
+resource "aws_wafv2_web_acl_association" "alb" {
+  resource_arn = module.alb.arn
+  web_acl_arn  = data.terraform_remote_state.net_sec.outputs.web_acl_arn
+}

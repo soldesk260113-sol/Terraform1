@@ -45,5 +45,7 @@ resource "aws_route" "to_onprem" {
   route_table_id         = each.value
   destination_cidr_block = var.onprem_cidr
   gateway_id             = aws_vpn_gateway.this.id
+
+  depends_on = [aws_vpn_gateway_attachment.this]
 }
 

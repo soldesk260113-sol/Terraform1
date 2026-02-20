@@ -37,3 +37,11 @@ module "vpn_test_sg" {
   allow_icmp = true
   allow_ssh  = true
 }
+
+module "waf_webacl" {
+  source = "../../modules/waf_webacl"
+
+  name        = "${var.name}-webacl"
+  scope       = "REGIONAL"
+  metric_name = "drwaf"
+}

@@ -14,7 +14,7 @@ external_secrets_namespace: external-secrets
 # Harbor Configuration
 harbor_url: "10.2.2.40:5000"
 harbor_username: "admin"
-harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
+harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123', true) }}"
 
 # Git Repository
 git_repo_url: "http://10.2.2.40:3001/admin/03_K8s_Infra.git"
