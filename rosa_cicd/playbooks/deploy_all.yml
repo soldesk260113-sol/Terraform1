@@ -9,7 +9,8 @@
   hosts: localhost
   gather_facts: no
   
-  # vars: group_vars/rosa.yml 사용
+  vars_files:
+    - ../group_vars/rosa.yml
   
   tasks:
     - name: Include Harbor to ECR Sync Tasks

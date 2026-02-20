@@ -1,16 +1,20 @@
 
 
 data "terraform_remote_state" "base" {
-  backend = "local"
+  backend = "s3"
   config = {
-    path = "../../00-base-network/envs/dr/terraform.tfstate"
+    bucket = "dr-backup-ap-northeast-2"
+    key    = "stacks/10-base-network/dr/terraform.tfstate"
+    region = "ap-northeast-2"
   }
 }
 
 data "terraform_remote_state" "net_sec" {
-  backend = "local"
+  backend = "s3"
   config = {
-    path = "../../10-net-sec/envs/dr/terraform.tfstate"
+    bucket = "dr-backup-ap-northeast-2"
+    key    = "stacks/20-net-sec/dr/terraform.tfstate"
+    region = "ap-northeast-2"
   }
 }
 
