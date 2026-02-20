@@ -1,21 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-      configuration_aliases = [aws.us_east_1]
-    }
-  }
-}
 
-provider "aws" {
-  region = "ap-northeast-2"
-}
-
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
-}
 
 data "terraform_remote_state" "base" {
   backend = "local"
@@ -88,10 +71,10 @@ module "dr_failover" {
   cluster_oidc_provider_arn = var.cluster_oidc_provider_arn
   worker_image_url          = var.worker_image_url
   
-  health_check_type      = "HTTPS"
-  health_check_port      = 443
-  alarm_name             = "On-Prem-Disaster-Alarm"
-  dr_failover_queue_name = "DR-Failover-Queue"
+  health_check_type      = "HTTPS" # TODO: 타겟 상황에 맞게 변경 (HTTP/HTTPS)
+  health_check_port      = 443     # TODO: 타겟 포트에 맞게 변경
+  alarm_name             = "On-Prem-Disaster-Alarm" # TODO: CloudWatch 알람 이름 확인
+  dr_failover_queue_name = "DR-Failover-Queue"      # TODO: SQS 큐 이름 확인
 
   rds_cluster_identifier = local.db_instance_id
   target_deployment_name = "web-service"

@@ -32,6 +32,7 @@ destroy_stack() {
 destroy_stack "30-database"
 destroy_stack "20-edge"
 destroy_stack "10-net-sec"
+destroy_stack "05-global"
 destroy_stack "00-base-network"
 
 echo "=========================================="
