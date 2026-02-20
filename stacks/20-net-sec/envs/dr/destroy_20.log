@@ -1,0 +1,62 @@
+nohup: ignoring input
+[0m[1mdata.terraform_remote_state.base: Reading...[0m[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway.this: Refreshing state... [id=vgw-0c258c03e1d5e780b][0m
+[0m[1mmodule.s2s_vpn.aws_customer_gateway.this: Refreshing state... [id=cgw-0fb282c0d2f10f76d][0m
+[0m[1mdata.terraform_remote_state.base: Read complete after 0s[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway_attachment.this: Refreshing state... [id=vpn-attachment-6b494fd6][0m
+[0m[1mmodule.s2s_vpn.aws_vpn_connection.this: Refreshing state... [id=vpn-09791116bebda0a47][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [31m-[0m destroy[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.s2s_vpn.aws_customer_gateway.this[0m will be [1m[31mdestroyed[0m
+[0m  [31m-[0m[0m resource "aws_customer_gateway" "this" {
+      [31m-[0m[0m arn              = "arn:aws:ec2:ap-northeast-2:368352028691:customer-gateway/cgw-0fb282c0d2f10f76d" [90m-> null[0m[0m
+      [31m-[0m[0m bgp_asn          = "65000" [90m-> null[0m[0m
+      [31m-[0m[0m id               = "cgw-0fb282c0d2f10f76d" [90m-> null[0m[0m
+      [31m-[0m[0m ip_address       = "121.160.41.205" [90m-> null[0m[0m
+      [31m-[0m[0m tags             = {
+          [31m-[0m[0m "Name" = "dr-vpn-cgw"
+        } [90m-> null[0m[0m
+      [31m-[0m[0m tags_all         = {
+          [31m-[0m[0m "Name" = "dr-vpn-cgw"
+        } [90m-> null[0m[0m
+      [31m-[0m[0m type             = "ipsec.1" [90m-> null[0m[0m
+        [90m# (3 unchanged attributes hidden)[0m[0m
+    }
+
+[1m  # module.s2s_vpn.aws_vpn_gateway.this[0m will be [1m[31mdestroyed[0m
+[0m  [31m-[0m[0m resource "aws_vpn_gateway" "this" {
+      [31m-[0m[0m amazon_side_asn = "64512" [90m-> null[0m[0m
+      [31m-[0m[0m arn             = "arn:aws:ec2:ap-northeast-2:368352028691:vpn-gateway/vgw-0c258c03e1d5e780b" [90m-> null[0m[0m
+      [31m-[0m[0m id              = "vgw-0c258c03e1d5e780b" [90m-> null[0m[0m
+      [31m-[0m[0m tags            = {
+          [31m-[0m[0m "Name" = "dr-vpn-vgw"
+        } [90m-> null[0m[0m
+      [31m-[0m[0m tags_all        = {
+          [31m-[0m[0m "Name" = "dr-vpn-vgw"
+        } [90m-> null[0m[0m
+      [31m-[0m[0m vpc_id          = "vpc-0bcd864f7d7d725d0" [90m-> null[0m[0m
+    }
+
+[1m  # module.s2s_vpn.aws_vpn_gateway_attachment.this[0m will be [1m[31mdestroyed[0m
+[0m  [31m-[0m[0m resource "aws_vpn_gateway_attachment" "this" {
+      [31m-[0m[0m id             = "vpn-attachment-6b494fd6" [90m-> null[0m[0m
+      [31m-[0m[0m vpc_id         = "vpc-0bcd864f7d7d725d0" [90m-> null[0m[0m
+      [31m-[0m[0m vpn_gateway_id = "vgw-0c258c03e1d5e780b" [90m-> null[0m[0m
+    }
+
+[1mPlan:[0m [0m0 to add, 0 to change, 3 to destroy.
+[0m[1mmodule.s2s_vpn.aws_customer_gateway.this: Destroying... [id=cgw-0fb282c0d2f10f76d][0m[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway_attachment.this: Destroying... [id=vpn-attachment-6b494fd6][0m[0m
+[0m[1mmodule.s2s_vpn.aws_customer_gateway.this: Destruction complete after 1s[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway_attachment.this: Still destroying... [id=vpn-attachment-6b494fd6, 00m10s elapsed][0m[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway_attachment.this: Destruction complete after 13s[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway.this: Destroying... [id=vgw-0c258c03e1d5e780b][0m[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway.this: Still destroying... [id=vgw-0c258c03e1d5e780b, 00m10s elapsed][0m[0m
+[0m[1mmodule.s2s_vpn.aws_vpn_gateway.this: Destruction complete after 11s[0m
+[0m[1m[32m
+Destroy complete! Resources: 3 destroyed.[0m
