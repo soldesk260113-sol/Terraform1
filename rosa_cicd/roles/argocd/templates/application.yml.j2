@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: {{ git_repo_url }}
     targetRevision: {{ git_branch }}
-    path: {{ item.name }}
+    path: {{ item.path }}
   
   destination:
     server: https://kubernetes.default.svc

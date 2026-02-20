@@ -13,6 +13,8 @@ import logging
 import requests
 from datetime import datetime
 import urllib3
+from kubernetes import client, config
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 로깅 설정
@@ -28,12 +30,24 @@ SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 RDS_INSTANCE_ID = os.getenv('RDS_INSTANCE_ID')
 ALB_DNS = os.getenv('ALB_DNS')
 VPN_CONNECTION_ID = os.getenv('VPN_CONNECTION_ID')
+K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', 'production')
 
 # AWS 클라이언트
 sqs = boto3.client('sqs', region_name=AWS_REGION)
 rds = boto3.client('rds', region_name=AWS_REGION)
 ec2 = boto3.client('ec2', region_name=AWS_REGION)
 cloudwatch = boto3.client('cloudwatch', region_name=AWS_REGION)
+
+# Kubernetes 클라이언트 설정
+try:
+    config.load_incluster_config()
+    v1 = client.CoreV1Api()
+    apps_v1 = client.AppsV1Api()
+    logger.info("Kubernetes 클라이언트 설정 완료 (In-Cluster)")
+except Exception as e:
+    logger.warning(f"Kubernetes 설정 실패: {e}")
+    v1 = None
+    apps_v1 = None
 
 
 class DRWorker:
@@ -43,7 +57,7 @@ class DRWorker:
         self.running = True
     
     def precheck(self):
-        """DR 사전 점검 (dr_precheck.sh 대체)"""
+        """DR 사전 점검"""
         logger.info("=== DR 사전 점검 시작 ===")
         
         # 1. VPN 상태 확인
@@ -53,6 +67,8 @@ class DRWorker:
         # 2. RDS 복제 지연 확인
         replication_lag = self.check_replication_lag()
         logger.info(f"복제 지연: {replication_lag}초")
+        if replication_lag < 0:
+            logger.warning("복제 지연 확인 실패")
         
         # 3. 온프레미스 Health Check
         onprem_healthy = self.check_onprem_health()
@@ -119,11 +135,12 @@ class DRWorker:
     def check_onprem_health(self):
         """온프레미스 Health Check"""
         try:
-            # Route53 Health Check 상태 확인
-            # 또는 직접 HTTP 요청
+            # Route53 Health Check 상태 확인 또는 직접 HTTP 요청
+            # TODO: 실제 헬스 체크 URL 확인 필요
             response = requests.get(
-                'http://cafekec.shop/health/global-status',
-                timeout=5
+                'https://cafekec.shop/health/global-status',
+                timeout=5,
+                verify=False
             )
             return response.status_code == 200
         
@@ -132,11 +149,20 @@ class DRWorker:
             return False
     
     def promote_rds(self):
-        """RDS Read Replica를 Primary로 승격 (db_promote.sh 대체)"""
+        """RDS Read Replica를 Primary로 승격"""
         logger.info(f"=== RDS 승격 시작: {RDS_INSTANCE_ID} ===")
         
         try:
-            # Read Replica 승격
+            # RDS 상태 확인
+            db_info = rds.describe_db_instances(DBInstanceIdentifier=RDS_INSTANCE_ID)
+            db = db_info['DBInstances'][0]
+            
+            # 이미 Primary인지 확인 (ReadReplicaSourceDBInstanceIdentifier가 없으면 Primary)
+            if 'ReadReplicaSourceDBInstanceIdentifier' not in db:
+                logger.info("이미 Primary 인스턴스입니다. 승격 과정을 건너뜁니다.")
+                return True
+
+            # Read Replica 승격 요청
             response = rds.promote_read_replica(
                 DBInstanceIdentifier=RDS_INSTANCE_ID
             )
@@ -160,7 +186,7 @@ class DRWorker:
             return False
     
     def postcheck(self):
-        """DR 사후 점검 (dr_postcheck.sh 대체)"""
+        """DR 사후 점검"""
         logger.info("=== DR 사후 점검 시작 ===")
         
         # 1. ALB Health Check
@@ -171,25 +197,26 @@ class DRWorker:
         rds_status = self.check_rds_status()
         logger.info(f"RDS 상태: {rds_status}")
         
-        # 3. ROSA Pod 상태 확인
-        # (Kubernetes API 호출 필요)
+        # 3. K8s Pod 상태 확인
+        k8s_status = self.check_k8s_status()
+        logger.info(f"K8s Pod 상태: {k8s_status}")
         
         return {
             'alb_healthy': alb_healthy,
-            'rds_status': rds_status
+            'rds_status': rds_status,
+            'k8s_status': k8s_status
         }
     
     def check_alb_health(self):
         """ALB Health Check"""
         try:
             if not ALB_DNS:
+                logger.warning("ALB_DNS 환경변수가 설정되지 않았습니다.")
                 return False
             
-            response = requests.get(
-                f'http://{ALB_DNS}/health',
-                timeout=10,
-                verify=False
-            )
+            # ALB DNS로 직접 요청 (HTTP/HTTPS)
+            url = f"http://{ALB_DNS}/health"
+            response = requests.get(url, timeout=10, verify=False)
             return response.status_code == 200
         
         except Exception as e:
@@ -211,28 +238,61 @@ class DRWorker:
         except Exception as e:
             logger.error(f"RDS 상태 확인 실패: {e}")
             return 'ERROR'
+
+    def check_k8s_status(self):
+        """Kubernetes 주요 Deployment 상태 확인"""
+        if not apps_v1:
+            return "K8S_CLIENT_ERROR"
+        
+        try:
+            deployments = apps_v1.list_namespaced_deployment(namespace=K8S_NAMESPACE)
+            status_map = {}
+            all_ready = True
+            
+            target_apps = ['energy-api', 'kma-api', 'web-v2-dashboard']
+            
+            for dep in deployments.items:
+                name = dep.metadata.name
+                # 타겟 앱만 확인하거나 전체 확인
+                # 여기서는 주요 앱이 정상인지 확인
+                if any(app in name for app in target_apps):
+                    ready = dep.status.ready_replicas if dep.status.ready_replicas else 0
+                    desired = dep.spec.replicas
+                    status_map[name] = f"{ready}/{desired}"
+                    
+                    if ready < desired:
+                        all_ready = False
+            
+            logger.info(f"K8s Deployment 상태: {status_map}")
+            return "HEALTHY" if all_ready else "UNHEALTHY"
+            
+        except Exception as e:
+            logger.error(f"K8s 상태 확인 실패: {e}")
+            return "ERROR"
     
     def process_message(self, message):
         """SQS 메시지 처리"""
         try:
             body = json.loads(message['Body'])
             event_type = body.get('event_type')
+            if not event_type and 'Records' in body: # SNS -> SQS 포맷인 경우
+                 # SNS 메시지 처리 로직 추가 필요할 수 있음
+                 event_type = "UNKNOWN_SNS"
             
             logger.info(f"메시지 수신: {event_type}")
             
             if event_type == 'ONPREM_FAILURE':
                 # 온프레미스 장애 감지
-                logger.warning("🚨 온프레미스 장애 감지!")
+                logger.warning("🚨 온프레미스 장애 감지! DR 절차를 시작합니다.")
                 
                 # 1. 사전 점검
-                precheck_result = self.precheck()
+                self.precheck()
                 
                 # 2. RDS 승격
                 if self.promote_rds():
                     # 3. 사후 점검
-                    postcheck_result = self.postcheck()
-                    
-                    logger.info("✅ DR 전환 완료!")
+                    self.postcheck()
+                    logger.info("✅ DR 전환 절차 완료!")
                     return True
                 else:
                     logger.error("❌ DR 전환 실패!")
@@ -243,13 +303,19 @@ class DRWorker:
                 logger.info("수동 Failover 요청")
                 return self.promote_rds()
             
+            elif event_type == 'HEALTH_CHECK':
+                logger.info("Health Check 메시지 수신 - 정상")
+                return True
+
             else:
                 logger.warning(f"알 수 없는 이벤트 타입: {event_type}")
-                return False
+                # 알 수 없는 메시지는 처리된 것으로 간주하여 삭제하거나 DLQ로 보냄
+                # 여기서는 삭제 처리 (False 리턴 시 무한 루프 가능성)
+                return True 
         
         except Exception as e:
             logger.error(f"메시지 처리 실패: {e}")
-            return False
+            return False # 재시도
     
     def run(self):
         """메인 루프"""

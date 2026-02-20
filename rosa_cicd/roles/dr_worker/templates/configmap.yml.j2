@@ -6,7 +6,7 @@ metadata:
   namespace: dr-system
 data:
   AWS_REGION: "{{ aws_region }}"
-  SQS_QUEUE_URL: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw sqs_queue_url 2>/dev/null') | default('') }}"
-  RDS_INSTANCE_ID: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw db_instance_id 2>/dev/null') | default('') }}"
-  ALB_DNS: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw alb_dns 2>/dev/null') | default('') }}"
-  VPN_CONNECTION_ID: "{{ lookup('pipe', 'cd ../../environments/dr && terraform output -raw vpn_connection_id 2>/dev/null') | default('') }}"
+  SQS_QUEUE_URL: "{{ lookup('pipe', 'cd ../../stacks/20-edge/envs/dr && terraform output -raw sqs_queue_url 2>/dev/null') | default('') }}"
+  RDS_INSTANCE_ID: "{{ lookup('pipe', 'cd ../../stacks/30-database/envs/dr && terraform output -raw db_instance_id 2>/dev/null') | default('') }}"
+  ALB_DNS: "{{ lookup('pipe', 'cd ../../stacks/20-edge/envs/dr && terraform output -raw alb_dns 2>/dev/null') | default('') }}"
+  VPN_CONNECTION_ID: "{{ lookup('pipe', 'cd ../../stacks/10-net-sec/envs/dr && terraform output -raw vpn_connection_id 2>/dev/null') | default('') }}"

@@ -61,11 +61,36 @@ terraform apply
 # 순서: 00 → 05 → 10 → 20 → 30
 ```
 
-**전체 destroy** (역순):
-```bash
 ./scripts/destroy_all.sh dr
 # 순서: 30 → 20 → 10 → 05 → 00
 ```
+
+### ROSA 클러스터 설정 (CI/CD)
+Terraform으로 인프라 배포 후, ROSA 클러스터 내부 설정을 위해 Ansible을 사용합니다.
+
+1. **ROSA 접속 정보 설정**: `rosa_cicd/inventory/hosts.yml` 파일에 API URL 등 입력.
+2. **Playbook 실행**:
+   ```bash
+   cd rosa_cicd
+   ansible-playbook -i inventory/hosts.yml playbooks/deploy_all.yml
+   ```
+   > **기능**: Harbor-ECR 이미지 동기화, Tekton/ArgoCD 설치, External Secrets 설정, DR Worker 배포
+
+### DR Worker 이미지 빌드
+DR 자동화 파드(`dr-worker`)가 사용할 이미지를 빌드하여 ECR에 푸시해야 합니다.
+
+```bash
+cd dr_worker-image
+# 1. ECR 로그인
+aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com
+
+# 2. 빌드 및 푸시
+docker build -t <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/production/dr-worker:latest .
+docker push <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/production/dr-worker:latest
+```
+
+### 사전 요구사항 (tfvars)
+`.gitignore` 설정에 의해 `terraform.tfvars` 파일은 커밋되지 않습니다. 각 스택의 `envs/<env>/` 디렉터리에 `terraform.tfvars` 파일을 생성하고 필요한 변수(DB 비밀번호, IP 주소 등)를 입력해야 합니다.
 
 ---
 

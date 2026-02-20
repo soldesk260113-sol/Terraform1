@@ -34,3 +34,4 @@
     state: present
     definition: "{{ lookup('template', 'application.yml.j2') }}"
   loop: "{{ applications }}"
+  when: not item.sync_only | default(false)

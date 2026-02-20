@@ -14,35 +14,47 @@ external_secrets_namespace: external-secrets
 # Harbor Configuration
 harbor_url: "10.2.2.40:5000"
 harbor_username: "admin"
-harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}" # 기본값 복구 (환경변수 없으면 Admin123)
+harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
 
 # Git Repository
-git_repo_url: "http://10.2.2.40:3001/admin/rosa-apps.git"
+git_repo_url: "http://10.2.2.40:3001/admin/03_K8s_Infra.git"
 git_branch: main
 
 # Applications
+# sync_only: true -> ArgoCD App 생성 제외 (이미지만 동기화)
 applications:
-  - name: oauth-api
-    image: production/oauth-api
-    harbor_image: library/oauth-api
-  - name: web-v2-dashboard
-    image: production/web-v2-dashboard
-    harbor_image: library/web-v2-dashboard
-  - name: integrated-dashboard
-    image: production/integrated-dashboard
-    harbor_image: library/integrated-dashboard
-  - name: map-api
-    image: production/map-api
-    harbor_image: library/map-api
   - name: energy-api
     image: production/energy-api
     harbor_image: library/energy-api
-  - name: my-web
-    image: production/my-web
-    harbor_image: library/my-web
+    path: apps/energy-api/helm
+  
   - name: kma-api
     image: production/kma-api
     harbor_image: library/kma-api
+    path: apps/kma-api/helm
+  
+  - name: frontcode
+    image: production/web-v2-dashboard
+    harbor_image: library/web-v2-dashboard
+    path: apps/frontcode/helm
+  
+  - name: ai-rag
+    image: production/ai-rag
+    harbor_image: library/ai-rag
+    path: apps/ai-rag/helm
+
+  - name: auth-chat-api
+    image: production/auth-chat-api
+    harbor_image: library/auth-chat-api
+    path: apps/frontcode/auth-chat-api/manifests
+
+  - name: redis-cache
+    image: production/redis
+    harbor_image: library/redis
+    path: apps/redis-cache/manifests
+    # redis는 public 이미지를 쓸 수도 있지만, 내부망 전용이라면 ECR 사용 권장
+
   - name: dr-worker
     image: production/dr-worker
     harbor_image: library/dr-worker
+    sync_only: true # Ansible Role로 별도 배포됨

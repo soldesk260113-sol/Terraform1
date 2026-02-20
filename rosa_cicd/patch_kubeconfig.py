@@ -1,7 +1,7 @@
 import yaml
 import os
 
-config_path = os.path.expanduser("~/.kube/config-tekton")
+config_path = os.path.expanduser("~/.kube/rosa-config")
 with open(config_path) as f:
     config = yaml.safe_load(f)
 

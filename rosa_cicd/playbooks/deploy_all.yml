@@ -9,13 +9,7 @@
   hosts: localhost
   gather_facts: no
   
-  vars:
-    harbor_url: "10.2.2.40:5000"
-    harbor_username: "admin"
-    harbor_password: "{{ lookup('env', 'HARBOR_PASSWORD') | default('Admin123') }}"
-    aws_region: "ap-northeast-2"
-    aws_account_id: "{{ lookup('pipe', 'aws sts get-caller-identity --query Account --output text') }}"
-    ecr_registry: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+  # vars: group_vars/rosa.yml 사용
   
   tasks:
     - name: Include Harbor to ECR Sync Tasks
