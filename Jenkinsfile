@@ -17,6 +17,8 @@ pipeline {
     environment {
         TF_IN_AUTOMATION = 'true'
         AWS_DEFAULT_REGION = 'ap-northeast-2'
+        // 시스템 경로를 강제로 주입하여 terraform을 찾을 수 있게 합니다.
+        PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
     }
 
     stages {
@@ -29,6 +31,7 @@ pipeline {
                     echo "========================================================="
                     echo "🚀 ANTIGRAVITY DR INFRASTRUCTURE PIPELINE STARTING..."
                     echo "========================================================="
+                    echo "📍 CURRENT PATH  : ${env.PATH}"
                     echo "📍 TARGET ENV   : ${params.ENV}"
                     echo "📍 TARGET STACK : ${params.STACK}"
                     echo "📍 OPERATION    : ${params.ACTION}"
