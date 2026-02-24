@@ -4,7 +4,6 @@ pipeline {
     options {
         timeout(time: 1, unit: 'HOURS')
         timestamps()
-        ansiColor('xterm')
         // 빌드 번호 옆에 설명을 예쁘게 붙여줍니다.
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
