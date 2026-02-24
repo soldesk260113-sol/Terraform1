@@ -68,7 +68,7 @@ pipeline {
                             echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
                         } else {
                             dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                                sh "${env.TF_EXEC} init -no-color"
+                                sh "${env.TF_EXEC} init -no-color -input=false"
                             }
                         }
                     }
@@ -87,7 +87,7 @@ pipeline {
                             echo "⚠️  'all' 스택은 전체 배포 스크립트를 통해 진행됩니다."
                         } else {
                             dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                                sh "${env.TF_EXEC} plan -out=tfplan -no-color"
+                                sh "${env.TF_EXEC} plan -out=tfplan -no-color -input=false -var-file=terraform.tfvars"
                             }
                         }
                     }
@@ -125,8 +125,8 @@ pipeline {
                             else if (params.ACTION == 'destroy') sh "./scripts/destroy_all.sh ${params.ENV}"
                         } else {
                             dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                                if (params.ACTION == 'apply') sh "${env.TF_EXEC} apply -auto-approve tfplan -no-color"
-                                else if (params.ACTION == 'destroy') sh "${env.TF_EXEC} destroy -auto-approve -no-color"
+                                if (params.ACTION == 'apply') sh "${env.TF_EXEC} apply -auto-approve tfplan -no-color -input=false"
+                                else if (params.ACTION == 'destroy') sh "${env.TF_EXEC} destroy -auto-approve -no-color -input=false -var-file=terraform.tfvars"
                             }
                         }
                     }
