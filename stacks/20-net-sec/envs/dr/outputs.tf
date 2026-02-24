@@ -1,17 +1,4 @@
-output "web_acl_arn" {
-  value       = module.waf_webacl.web_acl_arn
-  description = "The ARN of the WAF WebACL"
-}
 
-output "web_acl_id" {
-  value       = module.waf_webacl.web_acl_id
-  description = "The ID of the WAF WebACL"
-}
-
-output "web_acl_name" {
-  value       = module.waf_webacl.web_acl_name
-  description = "The Name of the WAF WebACL"
-}
 
 output "vpn_sg_id" {
   value       = module.vpn_sg.sg_id
