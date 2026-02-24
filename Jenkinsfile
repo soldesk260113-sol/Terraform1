@@ -31,7 +31,25 @@ pipeline {
                     echo "========================================================="
                     echo "🚀 ANTIGRAVITY DR INFRASTRUCTURE PIPELINE STARTING..."
                     echo "========================================================="
+                    
+                    // 테라폼이 있는지 확인하고 없으면 포터블 버전을 시동합니다.
+                    def tfExists = sh(script: "command -v terraform >/dev/null 2>&1", returnStatus: true) == 0
+                    if (!tfExists) {
+                        echo "⚠️  [SYSTEM] Terraform not found. Installing portable version..."
+                        sh """
+                            if [ ! -f bin/terraform ]; then
+                                mkdir -p bin
+                                curl -L https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip -o terraform.zip
+                                unzip -o terraform.zip -d bin/
+                                rm terraform.zip
+                            fi
+                        """
+                        env.PATH = "${workspace}/bin:${env.PATH}"
+                        echo "✅ [SYSTEM] Portable Terraform installed at ${workspace}/bin"
+                    }
+                    
                     echo "📍 CURRENT PATH  : ${env.PATH}"
+                    sh "terraform --version"
                     echo "📍 TARGET ENV   : ${params.ENV}"
                     echo "📍 TARGET STACK : ${params.STACK}"
                     echo "📍 OPERATION    : ${params.ACTION}"
