@@ -87,7 +87,16 @@ pipeline {
                             echo "⚠️  'all' 스택은 전체 배포 스크립트를 통해 진행됩니다."
                         } else {
                             dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                                sh "${env.TF_EXEC} plan -out=tfplan -no-color -input=false -var-file=terraform.tfvars"
+                                sh "${env.TF_EXEC} plan -out=tfplan -no-color -input=false -var-file=terraform.tfvars > tf_plan_raw.txt"
+                                // 플랜 결과 출력
+                                sh "cat tf_plan_raw.txt"
+                                
+                                // 요약 정보 추출 (Plan: X to add, Y to change, Z to destroy)
+                                def planSummary = sh(script: "grep 'Plan:' tf_plan_raw.txt || echo 'No changes / Error'", returnStdout: true).trim()
+                                env.PLAN_SUMMARY = planSummary
+                                
+                                // UI 빌드 설명 업데이트!!
+                                currentBuild.description = "Env: ${params.ENV} | Stack: ${params.STACK} | 📊 ${planSummary}"
                             }
                         }
                     }
@@ -103,8 +112,9 @@ pipeline {
                 script {
                     echo "---------------------------------------------------------"
                     echo "🙋 인프라 변경 승인이 필요합니다!"
+                    echo "🔍 요약: ${env.PLAN_SUMMARY}"
                     echo "---------------------------------------------------------"
-                    input message: "위의 Plan 결과를 확인하셨습니까? '${params.STACK}' 스택을 '${params.ACTION}' 하시겠습니까?", 
+                    input message: "플랜 결과 [ ${env.PLAN_SUMMARY} ] 를 확인하셨습니까? 실행하시겠습니까?", 
                           ok: "🚀 승인 및 실행 (Proceed)"
                 }
             }
