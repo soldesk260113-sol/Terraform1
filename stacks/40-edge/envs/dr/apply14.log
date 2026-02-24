@@ -1,0 +1,98 @@
+[0m[1mdata.terraform_remote_state.base: Reading...[0m[0m
+[0m[1mdata.terraform_remote_state.database: Reading...[0m[0m
+[0m[1mdata.terraform_remote_state.net_sec: Reading...[0m[0m
+[0m[1mkubernetes_namespace.production: Refreshing state... [id=production][0m
+[0m[1mmodule.dr_failover.data.archive_file.lambda_zip: Reading...[0m[0m
+[0m[1mmodule.dr_failover.data.archive_file.lambda_zip: Read complete after 0s [id=9badcf42b77b769fda2698e8a02d1a26f7cf99a0][0m
+[0m[1mkubernetes_ingress_v1.kma_api_dust: Refreshing state... [id=production/kma-api-dust][0m
+[0m[1mkubernetes_service.redis: Refreshing state... [id=production/redis][0m
+[0m[1mkubernetes_deployment.web_v2_dashboard: Refreshing state... [id=production/web-v2-dashboard][0m
+[0m[1mkubernetes_deployment.auth_chat_api: Refreshing state... [id=production/auth-chat-api][0m
+[0m[1mkubernetes_deployment.kma_api: Refreshing state... [id=production/kma-api][0m
+[0m[1mdata.terraform_remote_state.database: Read complete after 0s[0m
+[0m[1mdata.terraform_remote_state.base: Read complete after 0s[0m
+[0m[1mkubernetes_deployment.redis: Refreshing state... [id=production/redis][0m
+[0m[1mkubernetes_ingress_v1.auth_chat_api: Refreshing state... [id=production/auth-chat-api-route][0m
+[0m[1mdata.terraform_remote_state.net_sec: Read complete after 0s[0m
+[0m[1mkubernetes_service.web_v2_dashboard: Refreshing state... [id=production/web-v2-dashboard][0m
+[0m[1mkubernetes_ingress_v1.kma_api_weather: Refreshing state... [id=production/kma-api-weather][0m
+[0m[1mkubernetes_deployment.energy_api: Refreshing state... [id=production/energy-api][0m
+[0m[1mkubernetes_ingress_v1.web_v2_dashboard: Refreshing state... [id=production/web-v2-dashboard][0m
+[0m[1mkubernetes_service.kma_api: Refreshing state... [id=production/kma-api][0m
+[0m[1mkubernetes_service.auth_chat_api: Refreshing state... [id=production/auth-chat-api][0m
+[0m[1mmodule.dr_failover.data.aws_region.current: Reading...[0m[0m
+[0m[1mmodule.dr_failover.data.aws_caller_identity.current: Reading...[0m[0m
+[0m[1mmodule.dr_failover.data.aws_region.current: Read complete after 0s [id=ap-northeast-2][0m
+[0m[1mmodule.dr_failover.aws_sqs_queue.failover_queue: Refreshing state... [id=https://sqs.ap-northeast-2.amazonaws.com/368352028691/dr-failover-queue][0m
+[0m[1mmodule.dr_failover.aws_iam_role.lambda_failover_role: Refreshing state... [id=dr-dr-failover-lambda-role][0m
+[0m[1mkubernetes_deployment.ai_rag: Refreshing state... [id=production/ai-rag-app][0m
+[0m[1mmodule.dr_failover.data.aws_caller_identity.current: Read complete after 0s [id=368352028691][0m
+[0m[1mdata.aws_vpc.selected: Reading...[0m[0m
+[0m[1mmodule.dr_failover.aws_security_group.lambda_sg: Refreshing state... [id=sg-07bba18544d9207bd][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.s3: Refreshing state... [id=vpce-0f63233c60ae849fe][0m
+[0m[1mmodule.dr_failover.aws_sqs_queue_policy.failover_queue_policy: Refreshing state... [id=https://sqs.ap-northeast-2.amazonaws.com/368352028691/dr-failover-queue][0m
+[0m[1mmodule.dr_failover.aws_iam_policy.lambda_failover_policy: Refreshing state... [id=arn:aws:iam::368352028691:policy/dr-dr-failover-lambda-policy][0m
+[0m[1mdata.aws_vpc.selected: Read complete after 1s [id=vpc-043653cba92aa288d][0m
+[0m[1maws_security_group.vpce: Refreshing state... [id=sg-08e88dc6840626744][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.logs: Refreshing state... [id=vpce-009e212c55af17725][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.sqs: Refreshing state... [id=vpce-0cefea10dc76ecefc][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.ecr_api: Refreshing state... [id=vpce-0af2047dc114d1b68][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.rds: Refreshing state... [id=vpce-06d1d2d4e79842e91][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.ecr_dkr: Refreshing state... [id=vpce-074807a9131bb86f6][0m
+[0m[1mmodule.dr_failover.aws_vpc_endpoint.monitoring: Refreshing state... [id=vpce-0059a512dbf09b598][0m
+[0m[1mmodule.dr_failover.aws_cloudwatch_event_rule.failover_trigger_us_east_1: Refreshing state... [id=dr-failover-trigger-rule][0m
+[0m[1mmodule.dr_failover.aws_iam_policy.eventbridge_cross_region_policy: Refreshing state... [id=arn:aws:iam::368352028691:policy/dr-eventbridge-cross-region-policy][0m
+[0m[1mmodule.dr_failover.aws_iam_role.eventbridge_cross_region: Refreshing state... [id=dr-eventbridge-cross-region-role][0m
+[0m[1mmodule.dr_failover.aws_iam_role_policy_attachment.lambda_attach_policy: Refreshing state... [id=dr-dr-failover-lambda-role-20260221121302909500000001][0m
+[0m[1mmodule.dr_failover.aws_lambda_function.dr_failover_lambda: Refreshing state... [id=dr-failover][0m
+[0m[1mmodule.dr_failover.aws_iam_role_policy_attachment.eventbridge_cross_region_attach: Refreshing state... [id=dr-eventbridge-cross-region-role-20260221111512132700000002][0m
+[0m[1mmodule.dr_failover.aws_cloudwatch_event_target.target_region_bus: Refreshing state... [id=dr-failover-trigger-rule-TargetRegionEventBus][0m
+[0m[1mmodule.dr_failover.aws_lambda_event_source_mapping.sqs_trigger: Refreshing state... [id=07f31b6a-d188-4dc8-81ea-e94bbf6a4456][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place[0m
+
+Terraform will perform the following actions:
+
+[1m  # kubernetes_deployment.ai_rag[0m will be updated in-place
+[0m  [33m~[0m[0m resource "kubernetes_deployment" "ai_rag" {
+        id               = "production/ai-rag-app"
+      [32m+[0m[0m wait_for_rollout = true
+
+        [90m# (2 unchanged blocks hidden)[0m[0m
+    }
+
+[1m  # kubernetes_deployment.web_v2_dashboard[0m will be updated in-place
+[0m  [33m~[0m[0m resource "kubernetes_deployment" "web_v2_dashboard" {
+        id               = "production/web-v2-dashboard"
+      [32m+[0m[0m wait_for_rollout = true
+
+        [90m# (2 unchanged blocks hidden)[0m[0m
+    }
+
+[1m  # kubernetes_namespace.production[0m will be updated in-place
+[0m  [33m~[0m[0m resource "kubernetes_namespace" "production" {
+        id                               = "production"
+        [90m# (1 unchanged attribute hidden)[0m[0m
+
+      [33m~[0m[0m metadata {
+          [33m~[0m[0m annotations      = {
+              [31m-[0m[0m "openshift.io/sa.scc.mcs"                 = "s0:c31,c0" [90m-> null[0m[0m
+              [31m-[0m[0m "openshift.io/sa.scc.supplemental-groups" = "1000930000/10000" [90m-> null[0m[0m
+              [31m-[0m[0m "openshift.io/sa.scc.uid-range"           = "1000930000/10000" [90m-> null[0m[0m
+            }
+            name             = "production"
+            [90m# (5 unchanged attributes hidden)[0m[0m
+        }
+    }
+
+[1mPlan:[0m [0m0 to add, 3 to change, 0 to destroy.
+[0m[1mkubernetes_namespace.production: Modifying... [id=production][0m[0m
+[0m[1mkubernetes_namespace.production: Modifications complete after 0s [id=production][0m
+[0m[1mkubernetes_deployment.ai_rag: Modifying... [id=production/ai-rag-app][0m[0m
+[0m[1mkubernetes_deployment.web_v2_dashboard: Modifying... [id=production/web-v2-dashboard][0m[0m
+[0m[1mkubernetes_deployment.ai_rag: Modifications complete after 0s [id=production/ai-rag-app][0m
+[0m[1mkubernetes_deployment.web_v2_dashboard: Modifications complete after 0s [id=production/web-v2-dashboard][0m
+[0m[1m[32m
+Apply complete! Resources: 0 added, 3 changed, 0 destroyed.[0m

@@ -6,8 +6,8 @@ variable "vpc_id" {
   type = string
 }
 
-variable "onprem_cidr" {
-  type = string
+variable "onprem_cidrs" {
+  type = list(string)
 }
 
 variable "allow_icmp" {

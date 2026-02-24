@@ -19,3 +19,20 @@ variable "primary_health_check_id" {
   description = "Route53 Health Check ID for the Primary environment"
   type        = string
 }
+
+variable "onprem_ip" {
+  description = "Tailscale IP of the on-premise database host"
+  type        = string
+  default     = ""
+}
+
+variable "environment" {
+  description = "Execution environment (e.g. dev, prod, dr)"
+  type        = string
+}
+
+variable "alarm_email" {
+  description = "Email address for operator alerts"
+  type        = string
+  default     = ""
+}

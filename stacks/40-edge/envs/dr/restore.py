@@ -1,4 +1,6 @@
+import re
 
+content_to_write = """
 data "terraform_remote_state" "base" {
   backend = "s3"
   config = {
@@ -532,6 +534,7 @@ resource "kubernetes_ingress_v1" "web_v2_dashboard_main" {
     namespace = kubernetes_namespace.production.metadata[0].name
     annotations = {
       "haproxy.router.openshift.io/rewrite-target" = "/"
+      "route.openshift.io/termination" = "edge"
     }
   }
   spec {
@@ -595,6 +598,7 @@ resource "kubernetes_ingress_v1" "web_v2_dashboard" {
     name = "web-v2-dashboard"
     namespace = kubernetes_namespace.production.metadata[0].name
     annotations = {
+      "route.openshift.io/termination" = "edge"
     }
   }
   spec {
@@ -657,9 +661,10 @@ resource "kubernetes_ingress_v1" "kma_api_weather" {
     name = "kma-api-weather"
     namespace = kubernetes_namespace.production.metadata[0].name
     annotations = {
-      "haproxy.router.openshift.io/rewrite-target" = "/weather"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/weather$2"
+      "haproxy.router.openshift.io/rewrite-target" = "/"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
       "nginx.ingress.kubernetes.io/use-regex"      = "true"
+      "route.openshift.io/termination"             = "edge"
     }
   }
   spec {
@@ -667,8 +672,8 @@ resource "kubernetes_ingress_v1" "kma_api_weather" {
       host = "www.cafekec.shop"
       http {
         path {
-          path      = "/api/weather"
-          path_type = "Prefix"
+          path      = "/api/weather(/|$)(.*)"
+          path_type = "ImplementationSpecific"
           backend {
             service {
               name = "kma-api"
@@ -684,8 +689,8 @@ resource "kubernetes_ingress_v1" "kma_api_weather" {
       host = "cafekec.shop"
       http {
         path {
-          path      = "/api/weather"
-          path_type = "Prefix"
+          path      = "/api/weather(/|$)(.*)"
+          path_type = "ImplementationSpecific"
           backend {
             service {
               name = "kma-api"
@@ -701,8 +706,8 @@ resource "kubernetes_ingress_v1" "kma_api_weather" {
       host = var.alb_dns_name
       http {
         path {
-          path      = "/api/weather"
-          path_type = "Prefix"
+          path      = "/api/weather(/|$)(.*)"
+          path_type = "ImplementationSpecific"
           backend {
             service {
               name = "kma-api"
@@ -725,6 +730,7 @@ resource "kubernetes_ingress_v1" "kma_api_dust" {
       "haproxy.router.openshift.io/rewrite-target" = "/dust"
       "nginx.ingress.kubernetes.io/rewrite-target" = "/dust$2"
       "nginx.ingress.kubernetes.io/use-regex"      = "true"
+      "route.openshift.io/termination"             = "edge"
     }
   }
   spec {
@@ -787,6 +793,7 @@ resource "kubernetes_ingress_v1" "ai_rag" {
     name = "ai-rag-route"
     namespace = kubernetes_namespace.production.metadata[0].name
     annotations = {
+      "route.openshift.io/termination"             = "edge"
     }
   }
   spec {
@@ -923,3 +930,7 @@ resource "kubernetes_service" "ai_rag" {
     }
   }
 }
+"""
+
+with open('./main.tf', 'w') as f:
+    f.write(content_to_write)

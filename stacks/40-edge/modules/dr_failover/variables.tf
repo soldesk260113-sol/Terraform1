@@ -65,35 +65,32 @@ variable "rds_cluster_identifier" {
   type        = string
 }
 
-variable "cluster_oidc_provider_arn" {
-  description = "IAM OIDC Provider ARN for the ROSA/EKS cluster to associate with the Service Account"
+variable "openshift_api_url" {
+  description = "OpenShift API URL to scale deployments during failover"
   type        = string
 }
 
-variable "cluster_service_account_namespace" {
-  description = "Kubernetes namespace for the DR worker"
+variable "openshift_token" {
+  description = "OpenShift Service Account Token with edit permissions in the target namespace"
   type        = string
-  default     = "dr-system"
+  sensitive   = true
 }
 
-variable "cluster_service_account_name" {
-  description = "Kubernetes ServiceAccount name for the DR worker"
+# --- DMS Task Variables ---
+variable "forward_task_arn" {
+  description = "DMS Forward Task ARN (On-prem -> AWS)"
   type        = string
-  default     = "dr-worker-sa"
+  default     = ""
 }
 
-variable "worker_image_url" {
-  description = "ECR Image URL for the worker deployment"
+variable "reverse_task_arn" {
+  description = "DMS Reverse Task ARN (AWS -> On-prem)"
   type        = string
+  default     = ""
 }
 
-variable "target_deployment_name" {
-  description = "Name of the deployment to scale/modify on failover"
+variable "onprem_host" {
+  description = "On-premise database host (Tailscale IP)"
   type        = string
-}
-
-variable "alarm_email" {
-  description = "Email address to receive SNS notifications for the alarm"
-  type        = string
-  default     = "wtdwd1015@naver.com"
+  default     = ""
 }

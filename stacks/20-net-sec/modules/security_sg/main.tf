@@ -10,7 +10,7 @@ resource "aws_security_group" "this" {
       from_port   = -1
       to_port     = -1
       protocol    = "icmp"
-      cidr_blocks = [var.onprem_cidr]
+      cidr_blocks = var.onprem_cidrs
     }
   }
 
@@ -21,7 +21,7 @@ resource "aws_security_group" "this" {
       from_port   = 22
       to_port     = 22
       protocol    = "tcp"
-      cidr_blocks = [var.onprem_cidr]
+      cidr_blocks = var.onprem_cidrs
     }
   }
 

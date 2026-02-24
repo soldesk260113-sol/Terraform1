@@ -20,19 +20,19 @@ module "s2s_vpn" {
   name             = var.name
   vpc_id           = local.vpc_id
   onprem_public_ip = var.onprem_public_ip
-  onprem_cidr      = var.onprem_cidr
+  onprem_cidrs    = var.onprem_cidrs
   cgw_bgp_asn      = 65000 # TODO: 온프레미스 라우터의 실제 BGP ASN으로 변경 필요
 
   static_routes_only = true
   route_table_ids    = local.private_route_table_ids
 }
 
-module "vpn_test_sg" {
+module "vpn_sg" {
   source = "../../modules/security_sg"
 
   name        = "${var.name}-sg"
   vpc_id      = local.vpc_id
-  onprem_cidr = var.onprem_cidr
+  onprem_cidrs = var.onprem_cidrs
 
   allow_icmp = true
   allow_ssh  = true

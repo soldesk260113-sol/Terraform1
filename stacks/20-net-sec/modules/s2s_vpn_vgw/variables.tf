@@ -10,8 +10,8 @@ variable "onprem_public_ip" {
   type = string
 }
 
-variable "onprem_cidr" {
-  type = string
+variable "onprem_cidrs" {
+  type = list(string)
 }
 
 variable "cgw_bgp_asn" {
