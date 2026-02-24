@@ -41,14 +41,12 @@ pipeline {
         stage('🔍 Terraform Init') {
             steps {
                 script {
-                    wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
-                        if (params.STACK == 'all') {
-                            echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
-                            // 여기에 순차적 init 로직 추가 가능
-                        } else {
-                            dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                                sh "terraform init -no-color"
-                            }
+                    if (params.STACK == 'all') {
+                        echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
+                        // 여기에 순차적 init 로직 추가 가능
+                    } else {
+                        dir("stacks/${params.STACK}/envs/${params.ENV}") {
+                            sh "terraform init -no-color"
                         }
                     }
                 }
