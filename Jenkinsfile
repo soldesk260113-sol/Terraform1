@@ -12,6 +12,7 @@ pipeline {
         choice(name: 'STACK', choices: ['00-global', '10-base-network', '20-net-sec', '30-database', '40-edge', 'all'], description: '💠 배포할 인프라 스택을 선택하세요.')
         choice(name: 'ACTION', choices: ['plan', 'apply', 'destroy'], description: '🛠 실행할 작업을 선택하세요.')
         string(name: 'ENV', defaultValue: 'dr', description: '🌐 환경 이름 (dr, prod, dev 등)')
+        string(name: 'AWS_CREDENTIAL_ID', defaultValue: 'aws-dr-keys', description: '🔑 Jenkins에 등록된 AWS Credential ID')
     }
 
     environment {
@@ -62,11 +63,13 @@ pipeline {
         stage('🔍 Terraform Init') {
             steps {
                 script {
-                    if (params.STACK == 'all') {
-                        echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
-                    } else {
-                        dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            sh "${env.TF_EXEC} init -no-color"
+                    withCredentials([usernamePassword(credentialsId: params.AWS_CREDENTIAL_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        if (params.STACK == 'all') {
+                            echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
+                        } else {
+                            dir("stacks/${params.STACK}/envs/${params.ENV}") {
+                                sh "${env.TF_EXEC} init -no-color"
+                            }
                         }
                     }
                 }
@@ -76,14 +79,16 @@ pipeline {
         stage('📊 Dry Run (Plan)') {
             steps {
                 script {
-                    echo "---------------------------------------------------------"
-                    echo "📝 인프라 변경 사항 분석 중 (Terraform Plan)..."
-                    echo "---------------------------------------------------------"
-                    if (params.STACK == 'all') {
-                        echo "⚠️  'all' 스택은 전체 배포 스크립트를 통해 진행됩니다."
-                    } else {
-                        dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            sh "${env.TF_EXEC} plan -out=tfplan -no-color"
+                    withCredentials([usernamePassword(credentialsId: params.AWS_CREDENTIAL_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        echo "---------------------------------------------------------"
+                        echo "📝 인프라 변경 사항 분석 중 (Terraform Plan)..."
+                        echo "---------------------------------------------------------"
+                        if (params.STACK == 'all') {
+                            echo "⚠️  'all' 스택은 전체 배포 스크립트를 통해 진행됩니다."
+                        } else {
+                            dir("stacks/${params.STACK}/envs/${params.ENV}") {
+                                sh "${env.TF_EXEC} plan -out=tfplan -no-color"
+                            }
                         }
                     }
                 }
@@ -111,17 +116,18 @@ pipeline {
             }
             steps {
                 script {
-                    echo "========================================================="
-                    echo "🔥 실제 인프라 변경 작업을 가동합니다: ${params.ACTION}"
-                    echo "========================================================="
-                    if (params.STACK == 'all') {
-                        // TODO: apply_all.sh 내부에서도 TF_EXEC를 쓰도록 수정이 필요할 수 있습니다.
-                        if (params.ACTION == 'apply') sh "./scripts/apply_all.sh ${params.ENV}"
-                        else if (params.ACTION == 'destroy') sh "./scripts/destroy_all.sh ${params.ENV}"
-                    } else {
-                        dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            if (params.ACTION == 'apply') sh "${env.TF_EXEC} apply -auto-approve tfplan -no-color"
-                            else if (params.ACTION == 'destroy') sh "${env.TF_EXEC} destroy -auto-approve -no-color"
+                    withCredentials([usernamePassword(credentialsId: params.AWS_CREDENTIAL_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        echo "========================================================="
+                        echo "🔥 실제 인프라 변경 작업을 가동합니다: ${params.ACTION}"
+                        echo "========================================================="
+                        if (params.STACK == 'all') {
+                            if (params.ACTION == 'apply') sh "./scripts/apply_all.sh ${params.ENV}"
+                            else if (params.ACTION == 'destroy') sh "./scripts/destroy_all.sh ${params.ENV}"
+                        } else {
+                            dir("stacks/${params.STACK}/envs/${params.ENV}") {
+                                if (params.ACTION == 'apply') sh "${env.TF_EXEC} apply -auto-approve tfplan -no-color"
+                                else if (params.ACTION == 'destroy') sh "${env.TF_EXEC} destroy -auto-approve -no-color"
+                            }
                         }
                     }
                 }
