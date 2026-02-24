@@ -32,30 +32,30 @@ pipeline {
                     echo "🚀 ANTIGRAVITY DR INFRASTRUCTURE PIPELINE STARTING..."
                     echo "========================================================="
                     
-                    // 테라폼이 있는지 확인하고 없으면 포터블 버전을 시동합니다.
+                    // 테라폼 바이너리 경로 결정 및 자가 설치
                     def tfExists = sh(script: "command -v terraform >/dev/null 2>&1", returnStatus: true) == 0
-                    if (!tfExists) {
-                        echo "⚠️  [SYSTEM] Terraform not found. Installing portable version..."
+                    if (tfExists) {
+                        env.TF_EXEC = "terraform"
+                        echo "✅ [SYSTEM] System Terraform detected."
+                    } else {
+                        echo "⚠️  [SYSTEM] Terraform not found. Setting up portable version..."
                         sh """
+                            mkdir -p bin
                             if [ ! -f bin/terraform ]; then
-                                mkdir -p bin
                                 curl -L https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip -o terraform.zip
                                 unzip -o terraform.zip -d bin/
+                                chmod +x bin/terraform
                                 rm terraform.zip
                             fi
                         """
-                        env.PATH = "${workspace}/bin:${env.PATH}"
-                        echo "✅ [SYSTEM] Portable Terraform installed at ${workspace}/bin"
+                        env.TF_EXEC = "${WORKSPACE}/bin/terraform"
+                        echo "✅ [SYSTEM] Portable Terraform ready at: ${env.TF_EXEC}"
                     }
                     
-                    echo "📍 CURRENT PATH  : ${env.PATH}"
-                    sh "terraform --version"
+                    sh "${env.TF_EXEC} --version"
                     echo "📍 TARGET ENV   : ${params.ENV}"
-                    echo "📍 TARGET STACK : ${params.STACK}"
                     echo "📍 OPERATION    : ${params.ACTION}"
-                    echo "========================================================="
                 }
-                git url: 'http://10.2.2.40:3001/admin/Terraform1.git', branch: 'main'
             }
         }
 
@@ -64,10 +64,9 @@ pipeline {
                 script {
                     if (params.STACK == 'all') {
                         echo "📦 [INFO] 전체 시스템 초기화 진행 중..."
-                        // 여기에 순차적 init 로직 추가 가능
                     } else {
                         dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            sh "terraform init -no-color"
+                            sh "${env.TF_EXEC} init -no-color"
                         }
                     }
                 }
@@ -84,7 +83,7 @@ pipeline {
                         echo "⚠️  'all' 스택은 전체 배포 스크립트를 통해 진행됩니다."
                     } else {
                         dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            sh "terraform plan -out=tfplan -no-color"
+                            sh "${env.TF_EXEC} plan -out=tfplan -no-color"
                         }
                     }
                 }
@@ -116,12 +115,13 @@ pipeline {
                     echo "🔥 실제 인프라 변경 작업을 가동합니다: ${params.ACTION}"
                     echo "========================================================="
                     if (params.STACK == 'all') {
+                        // TODO: apply_all.sh 내부에서도 TF_EXEC를 쓰도록 수정이 필요할 수 있습니다.
                         if (params.ACTION == 'apply') sh "./scripts/apply_all.sh ${params.ENV}"
                         else if (params.ACTION == 'destroy') sh "./scripts/destroy_all.sh ${params.ENV}"
                     } else {
                         dir("stacks/${params.STACK}/envs/${params.ENV}") {
-                            if (params.ACTION == 'apply') sh "terraform apply -auto-approve tfplan -no-color"
-                            else if (params.ACTION == 'destroy') sh "terraform destroy -auto-approve -no-color"
+                            if (params.ACTION == 'apply') sh "${env.TF_EXEC} apply -auto-approve tfplan -no-color"
+                            else if (params.ACTION == 'destroy') sh "${env.TF_EXEC} destroy -auto-approve -no-color"
                         }
                     }
                 }
