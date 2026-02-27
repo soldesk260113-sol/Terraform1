@@ -125,7 +125,7 @@ resource "aws_cloudfront_distribution" "main" {
     origin_id = "failover-group"
 
     failover_criteria {
-      status_codes = [500, 502, 503, 504]
+      status_codes = [403, 404, 500, 502, 503, 504]
     }
 
     member {

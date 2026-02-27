@@ -35,3 +35,13 @@ variable "alb_dns_name" {
 variable "alb_zone_id" {
   type = string
 }
+
+variable "default_model" {
+  type    = string
+  default = "llama3.1:8b"
+}
+
+variable "use_cloudfront_only" {
+  type    = bool
+  default = false
+}

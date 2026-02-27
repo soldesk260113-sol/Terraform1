@@ -36,3 +36,9 @@ variable "alarm_email" {
   type        = string
   default     = ""
 }
+
+variable "use_cloudfront_only" {
+  description = "If true, DNS records will always point to CloudFront and ignore failover."
+  type        = bool
+  default     = false
+}

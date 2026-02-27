@@ -23,6 +23,7 @@ resource "aws_sns_topic_subscription" "operator_email" {
 
 # 1. WWW 레코드 (Primary: CloudFront)
 resource "aws_route53_record" "www_primary" {
+  count   = var.use_cloudfront_only ? 0 : 1
   zone_id = aws_route53_zone.primary.zone_id
   name    = "www.${var.domain_name}"
   type    = "A"
@@ -42,8 +43,23 @@ resource "aws_route53_record" "www_primary" {
   health_check_id = aws_route53_health_check.onprem_internal.id
 }
 
+# 1-1. WWW 레코드 (Simple: Always CloudFront)
+resource "aws_route53_record" "www_simple" {
+  count   = var.use_cloudfront_only ? 1 : 0
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = "www.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.main.domain_name
+    zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # 2. WWW 레코드 (Secondary: ALB)
 resource "aws_route53_record" "www_secondary" {
+  count   = var.use_cloudfront_only ? 0 : 1
   zone_id = aws_route53_zone.primary.zone_id
   name    = "www.${var.domain_name}"
   type    = "A"
@@ -65,6 +81,7 @@ resource "aws_route53_record" "www_secondary" {
 
 # 3. Apex 레코드 (Primary: CloudFront)
 resource "aws_route53_record" "apex_primary" {
+  count   = var.use_cloudfront_only ? 0 : 1
   zone_id = aws_route53_zone.primary.zone_id
   name    = var.domain_name
   type    = "A"
@@ -84,8 +101,23 @@ resource "aws_route53_record" "apex_primary" {
   health_check_id = aws_route53_health_check.onprem_internal.id
 }
 
+# 3-1. Apex 레코드 (Simple: Always CloudFront)
+resource "aws_route53_record" "apex_simple" {
+  count   = var.use_cloudfront_only ? 1 : 0
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.main.domain_name
+    zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # 4. Apex 레코드 (Secondary: ALB)
 resource "aws_route53_record" "apex_secondary" {
+  count   = var.use_cloudfront_only ? 0 : 1
   zone_id = aws_route53_zone.primary.zone_id
   name    = var.domain_name
   type    = "A"

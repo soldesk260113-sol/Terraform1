@@ -9,20 +9,24 @@ AWS 기반 DR(Disaster Recovery) 인프라를 Terraform으로 관리하는 프�
 
 ```
 terraform/
-├── stacks/                   # ✅ 메인 인프라 (레이어드 아키텍처)
-│   ├── 00-global/            # [L0] ECR 레포지토리, S3 DR 백업 버킷
-│   ├── 10-base-network/      # [L1] VPC, 서브넷, IGW, NAT GW, 라우팅
-│   ├── 20-net-sec/           # [L2] Site-to-Site VPN, Security Group
-│   ├── 30-database/          # [L3] RDS (Aurora/PostgreSQL)
-│   └── 40-edge/              # [L4] ALB, Route 53 Failover, DR 자동화 로직
-│
-├── rosa_cicd/                # ROSA 클러스터 CI/CD (Ansible 플레이북)
-│                             #   Tekton, ArgoCD, External Secrets 설정
-├── dr_worker-image/          # DR Worker 컨테이너 소스
-│                             #   Dockerfile + dr_worker.py (자동 페일오버)
-├── scripts/                  # 일괄 실행 스크립트
-│   ├── apply_all.sh          #   전체 스택 순차 apply
-│   └── destroy_all.sh        #   전체 스택 역순 destroy
+├── stacks/                             # ✅ 메인 인프라 (레이어드 아키텍처)
+│   ├── 00-global/                      # [L0] 전역 리소스 (ECR, S3)
+│   │   ├── envs/dr/                    # 재해복구 환경 설정
+│   │   └── modules/                    # ecr, s3 (State Backend)
+│   ├── 10-base-network/                # [L1] 네트워크 기초 (VPC, Routing)
+│   │   ├── envs/dr/
+│   │   └── modules/                    # vpc (Subnets, IGW, NAT)
+│   ├── 20-net-sec/                     # [L2] 보안 및 연결 (VPN, SG)
+│   │   ├── envs/dr/
+│   │   └── modules/                    # security_sg, s2s_vpn_vgw
+│   ├── 30-database/                    # [L3] 데이터 계층 (RDS, DMS)
+│   │   ├── envs/dr/
+│   │   └── modules/                    # rds, dms, dms_automation, s3_pgbackrest
+│   └── 40-edge/                        # [L4] 사용자 접점 & DR 자동화
+│       ├── envs/dr/
+│       └── modules/                    # route53, dr_failover (Lambda)
+├── rosa_cicd/                          # ROSA 클러스터 CI/CD 및 이미지 이관
+├── Jenkinsfile                         # 인프라 자동화 파이프라인
 └── README.md
 ```
 

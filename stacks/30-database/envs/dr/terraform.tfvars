@@ -6,7 +6,7 @@ project_name      = "antigravity-dr-db"
 db_instance_class     = "db.t3.medium"
 rds_db_password       = "postgres123!" # AWS RDS 비밀번호
 onprem_db_password    = "CHANGE_ME"    # 온프레미스 DB 비밀번호 (기존 API 호환용)
-db_allocated_storage  = 20
+db_allocated_storage  = 100
 postgres_version      = "13"
 
 # DMS

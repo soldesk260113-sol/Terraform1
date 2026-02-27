@@ -105,6 +105,7 @@ module "route53" {
   onprem_ip               = var.onprem_ip
   environment             = var.environment
   alarm_email             = var.alarm_email
+  use_cloudfront_only     = var.use_cloudfront_only
 }
 # Note: ROSA ALB is actually an NLB, which doesn't support Regional WAF.
 # WAF should be associated with CloudFront instead.
@@ -514,6 +515,7 @@ resource "kubernetes_service" "web_v2_dashboard" {
       app = "web-v2-dashboard"
     }
     port {
+      name="http"
       port        = 80
       target_port = 80
     }
@@ -586,8 +588,25 @@ resource "kubernetes_ingress_v1" "web_v2_dashboard_main" {
         }
       }
     }
+    rule {
+      host = var.primary_target_domain
+      http {
+        path {
+          path = "/main"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "web-v2-dashboard"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
   }
-}
+}        
 
 # Ingress for root and assets (NO rewrite-target to avoid breaking static files)
 resource "kubernetes_ingress_v1" "web_v2_dashboard" {
@@ -649,8 +668,26 @@ resource "kubernetes_ingress_v1" "web_v2_dashboard" {
         }
       }
     }
-  }
-}
+    rule {
+      host = var.primary_target_domain
+      http {
+        path {
+          path = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "web-v2-dashboard"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+            }
+          }
+
 
 resource "kubernetes_ingress_v1" "kma_api_weather" {
   metadata {
@@ -714,8 +751,26 @@ resource "kubernetes_ingress_v1" "kma_api_weather" {
         }
       }
     }
-  }
-}
+    rule {
+      host = var.primary_target_domain
+      http {
+        path {
+          path      = "/api/weather"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "kma-api"
+              port {
+                number = 8000
+              }
+            }
+          }
+        }
+      }
+    }
+            }
+          }
+
 
 resource "kubernetes_ingress_v1" "kma_api_dust" {
   metadata {
@@ -779,8 +834,25 @@ resource "kubernetes_ingress_v1" "kma_api_dust" {
         }
       }
     }
-  }
-}
+    rule {
+      host = var.primary_target_domain
+      http {
+        path {
+          path = "/api/dust"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "kma-api"
+              port {
+                number = 8000
+              }
+            }
+          }
+        }
+      }
+    }
+            }
+          }
 
 resource "kubernetes_ingress_v1" "ai_rag" {
   metadata {
@@ -841,8 +913,26 @@ resource "kubernetes_ingress_v1" "ai_rag" {
         }
       }
     }
-  }
-}
+    rule {
+      host = var.primary_target_domain
+      http {
+        path {
+          path      = "/api/ai"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "ai-rag"
+              port {
+                number = 3000
+              }
+            }
+          }
+        }
+      }
+    }
+            }
+          }
+
 
 
 resource "kubernetes_deployment" "ai_rag" {
@@ -877,11 +967,11 @@ resource "kubernetes_deployment" "ai_rag" {
 
           env {
             name  = "OLLAMA_HOST"
-            value = "http://139.150.91.194:11434"
+            value = "http://139.150.91.194:11435"
           }
           env {
             name  = "OLLAMA_HOST_PRIMARY"
-            value = "http://139.150.91.194:11434"
+            value = "http://139.150.91.194:11435"
           }
           env {
             name  = "OLLAMA_HOST_SECONDARY"
@@ -889,7 +979,7 @@ resource "kubernetes_deployment" "ai_rag" {
           }
           env {
             name  = "DEFAULT_MODEL"
-            value = "llama3.1:70b"
+            value = var.default_model
           }
           env {
             name  = "KMA_API_URL"
